@@ -235,7 +235,8 @@
 
         const layerControl = L.control.layers(baseLayers, overlays, {
           collapsed: true,
-        }).addTo(map);
+        }).addTo(map); hillshade.addTo(map);
+
 
         // HILLSHADE LAYER
 const hillshade = L.tileLayer
