@@ -90,4 +90,199 @@
       }
 
       .gps-toggle:active {
-        transform: translateY(0
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+      }
+
+      .gps-marker {
+        stroke-width: 3px;
+      }
+
+      /* Leaflet controls wat netter + onder de GPS-toggle duwen */
+      .leaflet-control-container .leaflet-control {
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .leaflet-top.leaflet-right {
+        margin-top: 110px; /* GPS toggle + wat ruimte */
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="app-title">Detectorkaart V2</div>
+        <div class="app-subtitle">Prototype – basis staat, toeters komen later</div>
+      </header>
+
+      <div id="map"></div>
+
+      <!-- GPS toggle button -->
+      <button id="gps-toggle" class="gps-toggle gps-off" type="button">
+        <span class="gps-dot"></span>
+        <span class="gps-label">GPS uit</span>
+      </button>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const map = L.map("map", {
+          zoomControl: true,
+        }).setView([52.07, 4.35], 12); // Den Haag-ish
+
+        // --- Basemap: OSM ---
+        const osm = L.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            maxZoom: 19,
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+          }
+        );
+        osm.addTo(map);
+
+        // --- AHN DTM 0.5m (PDOK) als WMS ---
+        const ahnWms = L.tileLayer.wms(
+          "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+          {
+            layers: "dtm_05m",
+            styles: "default",
+            format: "image/png",
+            transparent: true,
+            attribution: "AHN DTM 0.5m via PDOK",
+          }
+        );
+
+        // Aan, uit via layer control; standaard NIET aan:
+        // ahnWms.addTo(map); // als je 'm standaard aan wil, haal dit commentaar weg
+
+        const baseLayers = {
+          OpenStreetMap: osm,
+        };
+
+        const overlays = {
+          "AHN DTM 0.5m (PDOK)": ahnWms,
+        };
+
+        L.control.layers(baseLayers, overlays, {
+          collapsed: true, // 👉 standaard dicht
+        }).addTo(map);
+
+        // ---- GPS-stip + accuracy cirkel ----
+        let gpsMarker = null;
+        let gpsAccuracyCircle = null;
+        let gpsActive = false; // hebben we ooit al een fix gehad?
+        let gpsTracking = false; // toggle status
+
+        function updateGps(positionEvent) {
+          const latlng = positionEvent.latlng;
+
+          if (!gpsMarker) {
+            gpsMarker = L.circleMarker(latlng, {
+              radius: 14,
+              weight: 3,
+              color: "#2563eb",
+              fillColor: "#3b82f6",
+              fillOpacity: 0.5,
+              className: "gps-marker",
+            }).addTo(map);
+          } else {
+            gpsMarker.setLatLng(latlng);
+          }
+
+          if (!gpsAccuracyCircle) {
+            gpsAccuracyCircle = L.circle(latlng, {
+              radius: positionEvent.accuracy || 20,
+              color: "#93c5fd",
+              weight: 1,
+              fillColor: "#bfdbfe",
+              fillOpacity: 0.15,
+            }).addTo(map);
+          } else {
+            gpsAccuracyCircle.setLatLng(latlng);
+            gpsAccuracyCircle.setRadius(positionEvent.accuracy || 20);
+          }
+        }
+
+        function onLocationFound(e) {
+          if (!gpsTracking) {
+            // als tracking uit staat, negeren
+            return;
+          }
+
+          updateGps(e);
+
+          if (!gpsActive) {
+            map.setView(e.latlng, 17);
+            gpsActive = true;
+          }
+        }
+
+        function onLocationError(e) {
+          console.warn("GPS error:", e);
+          alert(
+            "Kon je locatie niet bepalen: " +
+              e.message +
+              "\n\nTip: gebruik HTTPS en geef je browser GPS-rechten."
+          );
+        }
+
+        map.on("locationfound", onLocationFound);
+        map.on("locationerror", onLocationError);
+
+        function startGpsTracking() {
+          map.locate({
+            setView: !gpsActive,
+            maxZoom: 18,
+            watch: true,
+            enableHighAccuracy: true,
+            timeout: 60000,
+            maximumAge: 0,
+          });
+        }
+
+        function stopGpsTracking() {
+          map.stopLocate();
+          // markers laten we staan; jij wilt meestal je laatste positie nog zien
+        }
+
+        // UI state van de toggle knop
+        const gpsToggleBtn = document.getElementById("gps-toggle");
+        const gpsLabelSpan = gpsToggleBtn.querySelector(".gps-label");
+
+        function setGpsUiState(on) {
+          gpsToggleBtn.classList.toggle("gps-on", on);
+          gpsToggleBtn.classList.toggle("gps-off", !on);
+          gpsLabelSpan.textContent = on ? "GPS aan" : "GPS uit";
+
+          // haptische feedback waar mogelijk
+          if (on && "vibrate" in navigator) {
+            navigator.vibrate(40);
+          }
+        }
+
+        if (gpsToggleBtn) {
+          gpsToggleBtn.addEventListener("click", () => {
+            gpsTracking = !gpsTracking;
+
+            setGpsUiState(gpsTracking);
+
+            if (gpsTracking) {
+              startGpsTracking();
+            } else {
+              stopGpsTracking();
+            }
+          });
+        }
+
+        // initial state
+        setGpsUiState(false);
+      });
+    </script>
+  </body>
+</html>
