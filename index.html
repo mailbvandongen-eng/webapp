@@ -222,14 +222,15 @@ const googleHybrid = L.tileLayer(
 
         // Geomorfologie laag (PDOK)
 const geomorf = L.tileLayer.wms(
-  "https://service.pdok.nl/bzk/geomorfologie/wms/v1_0?",
+  "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
   {
-    layers: "geomorfologie",
+    layers: "geomorphological_area",
     format: "image/png",
     transparent: true,
-    attribution: "Geomorfologische Kaart via PDOK"
+    attribution: "BRO Geomorfologische Kaart via PDOK"
   }
 );
+
 
 const baseLayers = {
   "OpenStreetMap": osm,
