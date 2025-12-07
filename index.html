@@ -1,27 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="nl">
   <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <title>Detectorkaart V2</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-    <!-- OpenLayers CSS -->
+    <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
 
-    <!-- Onze eigen CSS -->
+    <!-- Eigen styles -->
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- De kaartcontainer -->
-    <div id="map" class="map"></div>
+    <div id="app">
+      <header class="app-header">
+        <div class="app-title">Detectorkaart V2</div>
+        <div class="app-subtitle">Prototype – basis staat, toeters komen later</div>
+      </header>
 
-    <!-- OpenLayers JS -->
-    <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+      <div id="map"></div>
 
-    <!-- Onze eigen JS -->
+      <!-- GPS-knop -->
+      <button id="gps-btn" class="map-button">
+        📍
+      </button>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Eigen JS -->
     <script src="main.js"></script>
   </body>
 </html>
