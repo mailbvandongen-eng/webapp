@@ -2,25 +2,22 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <title>Detectorkaart V2</title>
+    <title>Detectorkaart V2 – Build 6.0</title>
 
-    <!-- Belangrijk voor mobiel -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Cache zo veel mogelijk uit voor index.html -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+    <!-- Cache uit -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
 
     <!-- Leaflet CSS -->
-    <link
-      rel="stylesheet"
+    <link rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
 
     <style>
-      html,
-      body {
+      html, body {
         margin: 0;
         padding: 0;
         height: 100%;
@@ -31,8 +28,7 @@
         width: 100vw;
         display: flex;
         flex-direction: column;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
+        font-family: system-ui, sans-serif;
       }
 
       .app-header {
@@ -42,22 +38,11 @@
         border-bottom: 1px solid #1f2937;
       }
 
-      .app-title {
-        font-size: 16px;
-        font-weight: 600;
-      }
-
-      .app-subtitle {
-        font-size: 11px;
-        color: #9ca3af;
-      }
-
       #map {
         flex: 1;
         width: 100%;
       }
 
-      /* GPS toggle knop */
       .gps-toggle {
         position: absolute;
         right: 12px;
@@ -68,376 +53,188 @@
         padding: 8px 18px;
         font-size: 15px;
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         display: flex;
         align-items: center;
         gap: 8px;
         color: #f9fafb;
-        transition: background 0.15s ease, transform 0.1s ease,
-          box-shadow 0.15s ease;
       }
 
-      .gps-toggle span.gps-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 999px;
-        background: #f9fafb;
-      }
+      .gps-toggle.gps-off { background: #7f1d1d; }
+      .gps-toggle.gps-on  { background: #14532d; }
 
-      .gps-toggle.gps-off {
-        background: #7f1d1d; /* rood */
-      }
-
-      .gps-toggle.gps-on {
-        background: #14532d; /* groen */
-        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6);
-      }
-
-      .gps-toggle:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-      }
-
-      .gps-toggle:active {
-        transform: translateY(0);
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-      }
-
-      /* GPS marker (stip) – hard donkerblauw, override alles */
       .gps-marker {
         stroke-width: 3px;
         stroke: #000b7a !important;
         fill: #0033ff !important;
       }
 
-      /* Leaflet controls iets groter */
-      .leaflet-control-container .leaflet-control {
-        border-radius: 6px;
-        overflow: hidden;
-        font-size: 14px;
-      }
-
-      /* Layer control onder GPS-knop */
       .leaflet-top.leaflet-right {
         margin-top: 120px;
         margin-right: 10px;
       }
-
-      /* Grotere knoppen op touch devices */
-      .leaflet-touch .leaflet-bar a,
-      .leaflet-touch .leaflet-bar a:hover {
-        width: 38px;
-        height: 38px;
-        line-height: 38px;
-      }
-
-      .leaflet-control-layers-toggle {
-        width: 38px !important;
-        height: 38px !important;
-      }
-
-      /* Kleine tweaks voor smalle schermen */
-      @media (max-width: 600px) {
-        .app-title {
-          font-size: 14px;
-        }
-
-        .app-subtitle {
-          font-size: 10px;
-        }
-
-        .gps-toggle {
-          top: 58px;
-          right: 8px;
-          padding: 8px 16px;
-          font-size: 14px;
-        }
-
-        .leaflet-top.leaflet-right {
-          margin-top: 116px;
-          margin-right: 6px;
-        }
-      }
     </style>
   </head>
+
   <body>
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Build Monumenten + AHN + GPS</div>
+        <div class="app-subtitle">Build 6.0 – Monumenten + Geomorf + AHN + GPS</div>
       </header>
 
       <div id="map"></div>
 
-      <!-- GPS toggle button -->
       <button id="gps-toggle" class="gps-toggle gps-off" type="button">
         <span class="gps-dot"></span>
         <span class="gps-label">GPS uit</span>
       </button>
     </div>
 
-    <!-- Leaflet JS -->
+    <!-- JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/topojson-client@3"></script>
 
     <script>
-      console.log("Detectorkaart V2 – Monumenten build geladen");
+      console.log("Detectorkaart V2 – Build 6.0 geladen");
 
       document.addEventListener("DOMContentLoaded", () => {
-        const map = L.map("map", {
-          zoomControl: true,
-        }).setView([52.07, 4.35], 12); // Den Haag-ish
 
-        // --- Basemap: OSM ---
+        const map = L.map("map").setView([52.07, 4.35], 12);
+
+        /* ---------------------------------------
+           Basemaps
+        ---------------------------------------- */
         const osm = L.tileLayer(
           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          {
-            maxZoom: 19,
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-          }
+          { maxZoom: 19 }
         ).addTo(map);
 
-        // Google Satellite Hybrid
         const googleHybrid = L.tileLayer(
-          "https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-          {
-            maxZoom: 20,
-            subdomains: ["mt0", "mt1", "mt2", "mt3"],
-            attribution: "© Google",
-          }
+          "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+          { maxZoom: 20 }
         );
 
-        // --- AHN DTM 0.5m (PDOK) WMS ---
+        /* ---------------------------------------
+           PDOK lagen
+        ---------------------------------------- */
         const ahnWms = L.tileLayer.wms(
           "https://service.pdok.nl/rws/ahn/wms/v1_0?",
           {
             layers: "dtm_05m",
-            styles: "default",
             format: "image/png",
             transparent: true,
-            attribution: "AHN DTM 0.5m via PDOK",
           }
         );
 
-        // --- Geomorfologie (BRO/PDOK) ---
         const geomorf = L.tileLayer.wms(
           "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
           {
             layers: "geomorphological_area",
             format: "image/png",
             transparent: true,
-            attribution: "Geomorfologische kaart via BRO/PDOK",
           }
         );
 
-// --- Monumenten (AMK TopoJSON) ---
-const monumentenLayer = L.layerGroup();
+        /* ---------------------------------------
+           Monumenten (TopoJSON)
+        ---------------------------------------- */
+        const monumentenLayer = L.layerGroup();
 
-fetch("data/amk_monumenten.topojson")
-  .then(r => r.json())
-  .then(topo => {
-    const objName = Object.keys(topo.objects)[0];
-    const geo = topojson.feature(topo, topo.objects[objName]);
+        fetch("data/amk_monumenten.topojson")
+          .then(r => r.json())
+          .then(topo => {
+            const name = Object.keys(topo.objects)[0];
+            const geo = topojson.feature(topo, topo.objects[name]);
 
-    const layer = L.geoJSON(geo, {
-      style: {
-        color: "#ff7300",
-        weight: 1,
-        fillOpacity: 0.3
-      },
-      onEachFeature: (feature, lyr) => {
-        const p = feature.properties || {};
-        const nr = p.MONUMENTNR || "onbekend";
-        const waarde = p.WAARDE || "geen info";
+            const layer = L.geoJSON(geo, {
+              style: { color: "#ff7300", weight: 1, fillOpacity: 0.25 },
+              onEachFeature: (f, l) => {
+                const p = f.properties || {};
+                const nr = p.MONUMENTNR ?? "onbekend";
+                const waarde = p.WAARDE ?? "geen info";
 
-        lyr.bindPopup(
-          `<b>Monument ${nr}</b><br>${waarde}`
-        );
-      }
-    });
+                l.bindPopup(`<b>Monument ${nr}</b><br>${waarde}`);
+              }
+            });
 
-    monumentenLayer.addLayer(layer);
-    console.log("AMK monumenten geladen:", objName);
-  })
-  .catch(err => console.error("AMK TopoJSON fout:", err));
+            monumentenLayer.addLayer(layer);
+            console.log("Monumenten geladen:", name);
+          })
+          .catch(err => console.error("Monumenten fout:", err));
 
-
+        /* ---------------------------------------
+           Layer Control
+        ---------------------------------------- */
         const baseLayers = {
-          OpenStreetMap: osm,
+          "OpenStreetMap": osm,
           "Google Satellite Hybrid": googleHybrid,
         };
 
         const overlays = {
-          "AHN DTM 0.5m (PDOK)": ahnWms,
-          "Geomorfologie (PDOK)": geomorf,
+          "AHN DTM 0.5m": ahnWms,
+          "Geomorfologie (BRO)": geomorf,
           "Monumenten (AMK)": monumentenLayer,
         };
 
-        const layerControl = L.control.layers(baseLayers, overlays, {
-          collapsed: true,
-        }).addTo(map);
+        L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
-        // --- GPS: marker + JS-pulse + accuracy ----
+        /* ---------------------------------------
+           GPS Tracking
+        ---------------------------------------- */
         let gpsMarker = null;
-        let gpsAccuracyCircle = null;
-        let gpsPulseCircle = null;
-        let gpsPulseTimer = null;
-        let gpsHasFix = false;
-        let gpsTracking = false;
+        let gpsAccuracy = null;
+        let tracking = false;
 
-        function startPulse(latlng) {
-          stopPulse();
-
-          gpsPulseCircle = L.circle(latlng, {
-            radius: 8,
-            color: "#001a72",
-            weight: 1,
-            fillColor: "#0033ff",
-            fillOpacity: 0.4,
-            interactive: false,
-          }).addTo(map);
-
-          let r = 8;
-          const maxR = 30;
-
-          gpsPulseTimer = setInterval(() => {
-            if (!gpsPulseCircle) return;
-            r += 0.8;
-            if (r > maxR) r = 8;
-            const rel = (r - 8) / (maxR - 8);
-            const opacity = 0.6 * (1 - rel);
-            gpsPulseCircle.setRadius(r);
-            gpsPulseCircle.setStyle({
-              opacity,
-              fillOpacity: opacity * 0.8,
-            });
-          }, 40);
-        }
-
-        function stopPulse() {
-          if (gpsPulseTimer) {
-            clearInterval(gpsPulseTimer);
-            gpsPulseTimer = null;
-          }
-          if (gpsPulseCircle) {
-            map.removeLayer(gpsPulseCircle);
-            gpsPulseCircle = null;
-          }
-        }
-
-        function updateGpsGraphics(latlng, accuracy) {
+        function updateGps(latlng, acc) {
           if (!gpsMarker) {
             gpsMarker = L.circleMarker(latlng, {
               radius: 7,
               weight: 3,
-              color: "#000b7a",
-              fillColor: "#0033ff",
-              fillOpacity: 1,
-              className: "gps-marker",
+              className: "gps-marker"
+            }).addTo(map);
+          } else gpsMarker.setLatLng(latlng);
+
+          if (!gpsAccuracy) {
+            gpsAccuracy = L.circle(latlng, {
+              radius: acc,
+              fillOpacity: 0.15,
+              color: "#1d4ed8"
             }).addTo(map);
           } else {
-            gpsMarker.setLatLng(latlng);
-          }
-
-          if (!gpsAccuracyCircle) {
-            gpsAccuracyCircle = L.circle(latlng, {
-              radius: accuracy || 20,
-              color: "#1d4ed8",
-              weight: 1,
-              fillColor: "#60a5fa",
-              fillOpacity: 0.2,
-            }).addTo(map);
-          } else {
-            gpsAccuracyCircle.setLatLng(latlng);
-            gpsAccuracyCircle.setRadius(accuracy || 20);
-          }
-
-          if (!gpsPulseCircle) {
-            startPulse(latlng);
-          } else {
-            gpsPulseCircle.setLatLng(latlng);
+            gpsAccuracy.setLatLng(latlng);
+            gpsAccuracy.setRadius(acc);
           }
         }
 
-        function clearGpsGraphics() {
-          if (gpsMarker) {
-            map.removeLayer(gpsMarker);
+        map.on("locationfound", e => {
+          if (!tracking) return;
+          updateGps(e.latlng, e.accuracy);
+          map.setView(e.latlng, 17);
+        });
+
+        map.on("locationerror", e => alert("GPS fout: " + e.message));
+
+        const gpsBtn = document.getElementById("gps-toggle");
+        const gpsLabel = gpsBtn.querySelector(".gps-label");
+
+        gpsBtn.addEventListener("click", () => {
+          tracking = !tracking;
+
+          gpsBtn.classList.toggle("gps-on", tracking);
+          gpsBtn.classList.toggle("gps-off", !tracking);
+          gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
+
+          if (tracking)
+            map.locate({ watch: true, enableHighAccuracy: true });
+          else {
+            map.stopLocate();
+            if (gpsMarker) map.removeLayer(gpsMarker);
+            if (gpsAccuracy) map.removeLayer(gpsAccuracy);
             gpsMarker = null;
+            gpsAccuracy = null;
           }
-          if (gpsAccuracyCircle) {
-            map.removeLayer(gpsAccuracyCircle);
-            gpsAccuracyCircle = null;
-          }
-          stopPulse();
-        }
+        });
 
-        function onLocationFound(e) {
-          if (!gpsTracking) return;
-
-          updateGpsGraphics(e.latlng, e.accuracy);
-
-          if (!gpsHasFix) {
-            gpsHasFix = true;
-            map.setView(e.latlng, 17);
-          }
-        }
-
-        function onLocationError(e) {
-          console.warn("GPS error:", e);
-          alert(
-            "Kon je locatie niet bepalen: " +
-              e.message +
-              "\n\nTip: gebruik HTTPS en geef je browser GPS-rechten."
-          );
-        }
-
-        map.on("locationfound", onLocationFound);
-        map.on("locationerror", onLocationError);
-
-        function startGpsTracking() {
-          gpsTracking = true;
-          gpsHasFix = false;
-          map.locate({
-            watch: true,
-            enableHighAccuracy: true,
-            timeout: 60000,
-            maximumAge: 0,
-          });
-        }
-
-        function stopGpsTracking() {
-          gpsTracking = false;
-          map.stopLocate();
-          clearGpsGraphics();
-        }
-
-        const gpsToggleBtn = document.getElementById("gps-toggle");
-        const gpsLabelSpan = gpsToggleBtn.querySelector(".gps-label");
-
-        function setGpsUiState(on) {
-          gpsToggleBtn.classList.toggle("gps-on", on);
-          gpsToggleBtn.classList.toggle("gps-off", !on);
-          gpsLabelSpan.textContent = on ? "GPS aan" : "GPS uit";
-
-          if ("vibrate" in navigator) {
-            navigator.vibrate(on ? 40 : 20);
-          }
-        }
-
-        if (gpsToggleBtn) {
-          gpsToggleBtn.addEventListener("click", () => {
-            const newState = !gpsTracking;
-            if (newState) {
-              startGpsTracking();
-            } else {
-              stopGpsTracking();
-            }
-            setGpsUiState(newState);
-          });
-        }
-
-        setGpsUiState(false);
       });
     </script>
   </body>
