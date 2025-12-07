@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Detectorkaart V2</title>
 
-    <!-- Belangrijk voor mobiel: correcte scaling -->
+    <!-- Belangrijk voor mobiel -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Leaflet CSS -->
@@ -52,7 +52,7 @@
         width: 100%;
       }
 
-      /* GPS toggle knop – groter, duidelijker */
+      /* GPS toggle knop */
       .gps-toggle {
         position: absolute;
         right: 12px;
@@ -85,6 +85,7 @@
 
       .gps-toggle.gps-on {
         background: #14532d; /* groen */
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6);
       }
 
       .gps-toggle:hover {
@@ -97,32 +98,31 @@
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
       }
 
+      /* GPS marker (stip) */
       .gps-marker {
         stroke-width: 3px;
       }
 
-      /* Pulserende GPS beam */
+      /* Pulserende ring rondom baken */
       .gps-pulse {
         stroke: #3b82f6;
-        fill: #3b82f6;
-        stroke-width: 0;
-        opacity: 0.6;
+        fill: rgba(59, 130, 246, 0.25);
         animation: gps-pulse 2s infinite;
-        transform-origin: center center;
       }
 
+      /* Let op: hier animeren we de 'r' (radius) van het SVG-circle, geen transform meer */
       @keyframes gps-pulse {
         0% {
-          transform: scale(1);
-          opacity: 0.5;
+          r: 10;
+          opacity: 0.6;
         }
         100% {
-          transform: scale(2.4);
+          r: 24;
           opacity: 0;
         }
       }
 
-      /* Leaflet controls wat groter, klik-gedrag */
+      /* Leaflet controls iets groter, klik-gedrag */
       .leaflet-control-container .leaflet-control {
         border-radius: 6px;
         overflow: hidden;
@@ -148,13 +148,12 @@
         height: 38px !important;
       }
 
-      /* Layer control standaard dicht – alleen op klik open (default Leaflet gedrag),
-         maar we zetten hier even duidelijk dat hover geen gekke dingen doet. */
+      /* Layer control standaard dicht; alleen klik */
       .leaflet-control-layers-expanded {
         cursor: default;
       }
 
-      /* Kleine tweak voor heel smalle schermen */
+      /* Kleine tweaks voor smalle schermen */
       @media (max-width: 600px) {
         .app-title {
           font-size: 14px;
@@ -182,7 +181,7 @@
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Prototype – basis + AHN + GPS</div>
+        <div class="app-subtitle">Prototype – AHN + GPS</div>
       </header>
 
       <div id="map"></div>
@@ -214,7 +213,7 @@
         );
         osm.addTo(map);
 
-        // --- AHN DTM 0.5m (PDOK) als WMS ---
+        // --- AHN DTM 0.5m (PDOK) WMS ---
         const ahnWms = L.tileLayer.wms(
           "https://service.pdok.nl/rws/ahn/wms/v1_0?",
           {
@@ -234,41 +233,47 @@
           "AHN DTM 0.5m (PDOK)": ahnWms,
         };
 
-        L.control.layers(baseLayers, overlays, {
-          collapsed: true, // standaard dicht – opent op klik
+        const layerControl = L.control.layers(baseLayers, overlays, {
+          collapsed: true, // standaard dicht
         }).addTo(map);
 
-        // ---- GPS-stip + accuracy + pulserende beam ----
+        // ✅ Na een klik op een layer-optie: weer dichtklappen
+        const layerControlContainer = layerControl.getContainer();
+        layerControlContainer.addEventListener("click", (e) => {
+          if (e.target.tagName === "INPUT") {
+            // heel kort wachten zodat Leaflet eerst zijn werk doet
+            setTimeout(() => {
+              layerControl.collapse();
+            }, 150);
+          }
+        });
+
+        // ---- GPS: marker + pulse + accuracy ----
         let gpsMarker = null;
         let gpsAccuracyCircle = null;
         let gpsPulseCircle = null;
-        let gpsActive = false; // ooit al fix gehad?
+        let gpsHasFix = false; // hebben we ooit een fix gehad?
         let gpsTracking = false; // toggle status
 
-        function updateGps(positionEvent) {
-          const latlng = positionEvent.latlng;
+        function createOrUpdateGpsMarker(latlng, accuracy) {
+          // kleine, donkere stip zoals Google Maps
+          if (!gpsMarker) {
+            gpsMarker = L.circleMarker(latlng, {
+              radius: 9,
+              weight: 3,
+              color: "#1e3a8a", // donkerblauwe rand
+              fillColor: "#1d4ed8", // stevige blauw
+              fillOpacity: 0.9,
+              className: "gps-marker",
+            }).addTo(map);
+          } else {
+            gpsMarker.setLatLng(latlng);
+          }
 
-          // vaste stip
-         if (!gpsMarker) {
-  gpsMarker = L.circleMarker(latlng, {
-    // iets kleiner, meer richting Google Maps
-    radius: 10,
-    weight: 3,
-    // donkerder rand en vulling
-    color: "#1e3a8a",      // donkerblauw rand
-    fillColor: "#1d4ed8",  // stevig blauw
-    fillOpacity: 0.9,
-    className: "gps-marker",
-  }).addTo(map);
-} else {
-  gpsMarker.setLatLng(latlng);
-}
-
-
-          // pulserende beam
+          // pulserende ring
           if (!gpsPulseCircle) {
             gpsPulseCircle = L.circleMarker(latlng, {
-              radius: 18,
+              radius: 10,
               weight: 0,
               fillOpacity: 0.6,
               className: "gps-pulse",
@@ -280,7 +285,7 @@
           // accuracy cirkel
           if (!gpsAccuracyCircle) {
             gpsAccuracyCircle = L.circle(latlng, {
-              radius: positionEvent.accuracy || 20,
+              radius: accuracy || 20,
               color: "#93c5fd",
               weight: 1,
               fillColor: "#bfdbfe",
@@ -288,21 +293,37 @@
             }).addTo(map);
           } else {
             gpsAccuracyCircle.setLatLng(latlng);
-            gpsAccuracyCircle.setRadius(positionEvent.accuracy || 20);
+            gpsAccuracyCircle.setRadius(accuracy || 20);
+          }
+        }
+
+        function removeGpsGraphics() {
+          if (gpsMarker) {
+            map.removeLayer(gpsMarker);
+            gpsMarker = null;
+          }
+          if (gpsPulseCircle) {
+            map.removeLayer(gpsPulseCircle);
+            gpsPulseCircle = null;
+          }
+          if (gpsAccuracyCircle) {
+            map.removeLayer(gpsAccuracyCircle);
+            gpsAccuracyCircle = null;
           }
         }
 
         function onLocationFound(e) {
           if (!gpsTracking) {
-            // als tracking uit staat, negeren
+            // als tracking uit staat, niets meer doen
             return;
           }
 
-          updateGps(e);
+          createOrUpdateGpsMarker(e.latlng, e.accuracy);
 
-          if (!gpsActive) {
+          if (!gpsHasFix) {
+            // eerste fix -> zoom in zoals Google Maps
             map.setView(e.latlng, 17);
-            gpsActive = true;
+            gpsHasFix = true;
           }
         }
 
@@ -319,8 +340,10 @@
         map.on("locationerror", onLocationError);
 
         function startGpsTracking() {
+          gpsTracking = true;
+          gpsHasFix = false;
           map.locate({
-            setView: !gpsActive,
+            setView: false,
             maxZoom: 18,
             watch: true,
             enableHighAccuracy: true,
@@ -330,8 +353,9 @@
         }
 
         function stopGpsTracking() {
+          gpsTracking = false;
           map.stopLocate();
-          // markers laten staan: laatste positie blijft zichtbaar
+          removeGpsGraphics();
         }
 
         // UI state van de toggle knop
@@ -343,7 +367,6 @@
           gpsToggleBtn.classList.toggle("gps-off", !on);
           gpsLabelSpan.textContent = on ? "GPS aan" : "GPS uit";
 
-          // haptische feedback waar mogelijk
           if ("vibrate" in navigator) {
             navigator.vibrate(on ? 40 : 20);
           }
@@ -351,18 +374,17 @@
 
         if (gpsToggleBtn) {
           gpsToggleBtn.addEventListener("click", () => {
-            gpsTracking = !gpsTracking;
-            setGpsUiState(gpsTracking);
-
-            if (gpsTracking) {
+            const newState = !gpsTracking;
+            if (newState) {
               startGpsTracking();
             } else {
               stopGpsTracking();
             }
+            setGpsUiState(newState);
           });
         }
 
-        // initial state
+        // initial UI state
         setGpsUiState(false);
       });
     </script>
