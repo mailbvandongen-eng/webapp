@@ -98,26 +98,26 @@
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
       }
 
-      /* GPS marker (stip) */
+      /* GPS marker (stip) – donkerder en iets kleiner */
       .gps-marker {
         stroke-width: 3px;
       }
 
-      /* Pulserende ring rondom baken */
+      /* Pulserende ring rondom baken – donkerder en compacter */
       .gps-pulse {
-        stroke: #3b82f6;
-        fill: rgba(59, 130, 246, 0.25);
-        animation: gps-pulse 2s infinite;
+        stroke: #1e3a8a;
+        fill: rgba(37, 99, 235, 0.2);
+        animation: gps-pulse 1.8s infinite;
       }
 
-      /* Let op: hier animeren we de 'r' (radius) van het SVG-circle, geen transform meer */
+      /* Animeren via 'r' van de circle */
       @keyframes gps-pulse {
         0% {
-          r: 10;
-          opacity: 0.6;
+          r: 9;
+          opacity: 0.7;
         }
         100% {
-          r: 24;
+          r: 20;
           opacity: 0;
         }
       }
@@ -148,7 +148,7 @@
         height: 38px !important;
       }
 
-      /* Layer control standaard dicht; alleen klik */
+      /* Layer control standaard dicht; alleen via klik open */
       .leaflet-control-layers-expanded {
         cursor: default;
       }
@@ -237,16 +237,21 @@
           collapsed: true, // standaard dicht
         }).addTo(map);
 
-        // ✅ Na een klik op een layer-optie: weer dichtklappen
-        const layerControlContainer = layerControl.getContainer();
-        layerControlContainer.addEventListener("click", (e) => {
-          if (e.target.tagName === "INPUT") {
-            // heel kort wachten zodat Leaflet eerst zijn werk doet
-            setTimeout(() => {
-              layerControl.collapse();
-            }, 150);
-          }
-        });
+        // Na wijziging (input change): layercontrol weer dichtklappen
+        function wireLayerControlCollapse() {
+          const container = layerControl.getContainer();
+          const inputs = container.querySelectorAll("input");
+
+          inputs.forEach((inp) => {
+            inp.addEventListener("change", () => {
+              setTimeout(() => {
+                layerControl.collapse();
+              }, 150);
+            });
+          });
+        }
+
+        wireLayerControlCollapse();
 
         // ---- GPS: marker + pulse + accuracy ----
         let gpsMarker = null;
@@ -255,15 +260,15 @@
         let gpsHasFix = false; // hebben we ooit een fix gehad?
         let gpsTracking = false; // toggle status
 
-        function createOrUpdateGpsMarker(latlng, accuracy) {
-          // kleine, donkere stip zoals Google Maps
+        function createOrUpdateGpsGraphics(latlng, accuracy) {
+          // donkere, compacte stip
           if (!gpsMarker) {
             gpsMarker = L.circleMarker(latlng, {
-              radius: 9,
+              radius: 8,
               weight: 3,
               color: "#1e3a8a", // donkerblauwe rand
-              fillColor: "#1d4ed8", // stevige blauw
-              fillOpacity: 0.9,
+              fillColor: "#1d4ed8", // stevige blauwe vulling
+              fillOpacity: 0.95,
               className: "gps-marker",
             }).addTo(map);
           } else {
@@ -273,7 +278,7 @@
           // pulserende ring
           if (!gpsPulseCircle) {
             gpsPulseCircle = L.circleMarker(latlng, {
-              radius: 10,
+              radius: 9,
               weight: 0,
               fillOpacity: 0.6,
               className: "gps-pulse",
@@ -313,17 +318,14 @@
         }
 
         function onLocationFound(e) {
-          if (!gpsTracking) {
-            // als tracking uit staat, niets meer doen
-            return;
-          }
+          if (!gpsTracking) return;
 
-          createOrUpdateGpsMarker(e.latlng, e.accuracy);
+          createOrUpdateGpsGraphics(e.latlng, e.accuracy);
 
           if (!gpsHasFix) {
-            // eerste fix -> zoom in zoals Google Maps
-            map.setView(e.latlng, 17);
+            // eerste fix -> direct inzoomen naar locatie
             gpsHasFix = true;
+            map.setView(e.latlng, 17);
           }
         }
 
