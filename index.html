@@ -7,6 +7,11 @@
     <!-- Belangrijk voor mobiel -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Probeer caching zo veel mogelijk uit te zetten voor index.html -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
@@ -98,12 +103,12 @@
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
       }
 
-      /* GPS marker (stip) – donkerder en iets kleiner */
+      /* GPS marker (stip) – donkerder en compact */
       .gps-marker {
         stroke-width: 3px;
       }
 
-      /* Pulserende ring rondom baken – donkerder en compacter */
+      /* Pulserende ring rondom baken – donkerder en compact */
       .gps-pulse {
         stroke: #1e3a8a;
         fill: rgba(37, 99, 235, 0.2);
@@ -113,11 +118,11 @@
       /* Animeren via 'r' van de circle */
       @keyframes gps-pulse {
         0% {
-          r: 9;
+          r: 8;
           opacity: 0.7;
         }
         100% {
-          r: 20;
+          r: 18;
           opacity: 0;
         }
       }
@@ -148,9 +153,14 @@
         height: 38px !important;
       }
 
-      /* Layer control standaard dicht; alleen via klik open */
-      .leaflet-control-layers-expanded {
-        cursor: default;
+      /* Eigen control over in-/uitklappen: geen hover-gedrag, alleen klik */
+      .leaflet-control-layers .leaflet-control-layers-list {
+        display: none;
+      }
+
+      .leaflet-control-layers.leaflet-control-layers-expanded
+        .leaflet-control-layers-list {
+        display: block;
       }
 
       /* Kleine tweaks voor smalle schermen */
@@ -181,7 +191,7 @@
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Prototype – AHN + GPS</div>
+        <div class="app-subtitle">Build 4 – AHN + GPS</div>
       </header>
 
       <div id="map"></div>
@@ -193,10 +203,12 @@
       </button>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS (met een simpele cache-buster query) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=4"></script>
 
     <script>
+      console.log("Detectorkaart V2 build 4 geladen");
+
       document.addEventListener("DOMContentLoaded", () => {
         const map = L.map("map", {
           zoomControl: true,
@@ -257,7 +269,7 @@
         let gpsMarker = null;
         let gpsAccuracyCircle = null;
         let gpsPulseCircle = null;
-        let gpsHasFix = false; // hebben we ooit een fix gehad?
+        let gpsHasFix = false; // ooit fix gehad?
         let gpsTracking = false; // toggle status
 
         function createOrUpdateGpsGraphics(latlng, accuracy) {
@@ -278,7 +290,7 @@
           // pulserende ring
           if (!gpsPulseCircle) {
             gpsPulseCircle = L.circleMarker(latlng, {
-              radius: 9,
+              radius: 8,
               weight: 0,
               fillOpacity: 0.6,
               className: "gps-pulse",
@@ -323,9 +335,8 @@
           createOrUpdateGpsGraphics(e.latlng, e.accuracy);
 
           if (!gpsHasFix) {
-            // eerste fix -> direct inzoomen naar locatie
             gpsHasFix = true;
-            map.setView(e.latlng, 17);
+            map.setView(e.latlng, 17); // direct naar je locatie
           }
         }
 
