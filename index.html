@@ -106,8 +106,8 @@
       /* GPS marker (stip) – hard donkerblauw, override alles */
       .gps-marker {
         stroke-width: 3px;
-        stroke: #000b7a !important;  /* bijna navy */
-        fill: #0033ff !important;    /* fel blauw */
+        stroke: #000b7a !important;
+        fill: #0033ff !important;
       }
 
       /* Leaflet controls iets groter */
@@ -164,7 +164,7 @@
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Build 5.1 – AHN + GPS</div>
+        <div class="app-subtitle">Build Monumenten + AHN + GPS</div>
       </header>
 
       <div id="map"></div>
@@ -176,11 +176,11 @@
       </button>
     </div>
 
-    <!-- Leaflet JS + cache buster -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=51"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-      console.log("Detectorkaart V2 build 5.1 geladen");
+      console.log("Detectorkaart V2 – Monumenten build geladen");
 
       document.addEventListener("DOMContentLoaded", () => {
         const map = L.map("map", {
@@ -195,8 +195,17 @@
             attribution:
               '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
           }
+        ).addTo(map);
+
+        // Google Satellite Hybrid
+        const googleHybrid = L.tileLayer(
+          "https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+          {
+            maxZoom: 20,
+            subdomains: ["mt0", "mt1", "mt2", "mt3"],
+            attribution: "© Google",
+          }
         );
-        osm.addTo(map);
 
         // --- AHN DTM 0.5m (PDOK) WMS ---
         const ahnWms = L.tileLayer.wms(
@@ -210,54 +219,69 @@
           }
         );
 
+        // --- Geomorfologie (BRO/PDOK) ---
+        const geomorf = L.tileLayer.wms(
+          "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
+          {
+            layers: "geomorphological_area",
+            format: "image/png",
+            transparent: true,
+            attribution: "Geomorfologische kaart via BRO/PDOK",
+          }
+        );
 
-        
-        // Google Satellite Hybrid
-const googleHybrid = L.tileLayer(
-  "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-  {
-    maxZoom: 20,
-    subdomains: ["mt0", "mt1", "mt2", "mt3"],
-    attribution: "© Google"
-  }
-);
+        // --- Monumenten (AMK GeoJSON) ---
+        const monumentenLayer = L.layerGroup();
 
-        // Geomorfologie laag (PDOK)
-const geomorf = L.tileLayer.wms(
-  "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
-  {
-    layers: "geomorphological_area",
-    format: "image/png",
-    transparent: true,
-    attribution: "BRO Geomorfologische Kaart via PDOK"
-  }
-);
+        fetch("data/monumenten_amk.geojson")
+          .then((r) => r.json())
+          .then((data) => {
+            const layer = L.geoJSON(data, {
+              style: {
+                color: "#7c2d12",
+                weight: 1,
+                fillColor: "#fed7aa",
+                fillOpacity: 0.4,
+              },
+              onEachFeature: (feature, lyr) => {
+                const p = feature.properties || {};
+                // generieke popup: alle velden tonen
+                const rows = Object.entries(p)
+                  .map(
+                    ([k, v]) =>
+                      `<tr><td><strong>${k}</strong></td><td>${v}</td></tr>`
+                  )
+                  .join("");
+                lyr.bindPopup(
+                  `<div style="max-height:200px;overflow:auto;">
+                     <table>${rows}</table>
+                   </div>`
+                );
+              },
+            });
+            monumentenLayer.addLayer(layer);
+            console.log("Monumentenlaag geladen");
+          })
+          .catch((err) =>
+            console.error("Fout bij laden monumenten_amk.geojson:", err)
+          );
 
+        const baseLayers = {
+          OpenStreetMap: osm,
+          "Google Satellite Hybrid": googleHybrid,
+        };
 
-const baseLayers = {
-  "OpenStreetMap": osm,
-  "Google Satellite Hybrid": googleHybrid
-  "Monumenten (AMK)": monumentenLayer
-
-};
-
-const overlays = {
-  "AHN DTM 0.5m (PDOK)": ahnWms,
-  "Geomorfologie (PDOK)": geomorf
-};
-
-
+        const overlays = {
+          "AHN DTM 0.5m (PDOK)": ahnWms,
+          "Geomorfologie (PDOK)": geomorf,
+          "Monumenten (AMK)": monumentenLayer,
+        };
 
         const layerControl = L.control.layers(baseLayers, overlays, {
           collapsed: true,
         }).addTo(map);
 
-        // Lagenselector: na wijziging weer dichtklappen
-        map.on("baselayerchange", () => layerControl.collapse());
-        map.on("overlayadd", () => layerControl.collapse());
-        map.on("overlayremove", () => layerControl.collapse());
-
-        // ---- GPS: marker + JS-pulse + accuracy ----
+        // --- GPS: marker + JS-pulse + accuracy ----
         let gpsMarker = null;
         let gpsAccuracyCircle = null;
         let gpsPulseCircle = null;
@@ -306,7 +330,6 @@ const overlays = {
         }
 
         function updateGpsGraphics(latlng, accuracy) {
-          // donkere compacte stip met expliciete className
           if (!gpsMarker) {
             gpsMarker = L.circleMarker(latlng, {
               radius: 7,
@@ -320,7 +343,6 @@ const overlays = {
             gpsMarker.setLatLng(latlng);
           }
 
-          // accuracy cirkel
           if (!gpsAccuracyCircle) {
             gpsAccuracyCircle = L.circle(latlng, {
               radius: accuracy || 20,
@@ -334,7 +356,6 @@ const overlays = {
             gpsAccuracyCircle.setRadius(accuracy || 20);
           }
 
-          // pulse starten of verplaatsen
           if (!gpsPulseCircle) {
             startPulse(latlng);
           } else {
@@ -361,7 +382,7 @@ const overlays = {
 
           if (!gpsHasFix) {
             gpsHasFix = true;
-            map.setView(e.latlng, 17); // direct naar fix
+            map.setView(e.latlng, 17);
           }
         }
 
@@ -394,7 +415,6 @@ const overlays = {
           clearGpsGraphics();
         }
 
-        // UI state van de toggle knop
         const gpsToggleBtn = document.getElementById("gps-toggle");
         const gpsLabelSpan = gpsToggleBtn.querySelector(".gps-label");
 
