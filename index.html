@@ -126,15 +126,17 @@
         //
         // Pas 'layers' hieronder aan naar de echte naam die je daar vindt.
 
-        const ahnWms = L.tileLayer.wms(
-          "https://service.pdok.nl/rws/ahn/wms/v1_0?",
-          {
-            layers: "ahn4_05m_dtm", // <--- HIER de ECHTE laagnaam invullen
-            format: "image/png",
-            transparent: true,
-            attribution: "AHN (LiDAR DTM) via PDOK",
-          }
-        );
+      const ahnWms = L.tileLayer.wms(
+  "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+  {
+    layers: "dtm_05m",          // ✅ JOUW laag
+    styles: "default",          // expliciet de default style
+    format: "image/png",
+    transparent: true,
+    attribution: "AHN DTM 0.5m via PDOK",
+  }
+);
+
 
         // Zet AHN standaard aan (optioneel, kun je uitzetten)
         ahnWms.addTo(map);
