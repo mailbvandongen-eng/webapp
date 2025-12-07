@@ -210,13 +210,25 @@
           }
         );
 
-        const baseLayers = {
-          OpenStreetMap: osm,
-        };
+        // Google Satellite Hybrid
+const googleHybrid = L.tileLayer(
+  "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+  {
+    maxZoom: 20,
+    subdomains: ["mt0", "mt1", "mt2", "mt3"],
+    attribution: "© Google"
+  }
+);
 
-        const overlays = {
-          "AHN DTM 0.5m (PDOK)": ahnWms,
-        };
+const baseLayers = {
+  "OpenStreetMap": osm,
+  "Google Satellite Hybrid": googleHybrid
+};
+
+const overlays = {
+  "AHN DTM 0.5m (PDOK)": ahnWms,
+};
+
 
         const layerControl = L.control.layers(baseLayers, overlays, {
           collapsed: true,
