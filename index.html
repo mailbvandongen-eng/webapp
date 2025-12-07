@@ -249,18 +249,21 @@
           const latlng = positionEvent.latlng;
 
           // vaste stip
-          if (!gpsMarker) {
-            gpsMarker = L.circleMarker(latlng, {
-              radius: 14,
-              weight: 3,
-              color: "#2563eb",
-              fillColor: "#3b82f6",
-              fillOpacity: 0.9,
-              className: "gps-marker",
-            }).addTo(map);
-          } else {
-            gpsMarker.setLatLng(latlng);
-          }
+         if (!gpsMarker) {
+  gpsMarker = L.circleMarker(latlng, {
+    // iets kleiner, meer richting Google Maps
+    radius: 10,
+    weight: 3,
+    // donkerder rand en vulling
+    color: "#1e3a8a",      // donkerblauw rand
+    fillColor: "#1d4ed8",  // stevig blauw
+    fillOpacity: 0.9,
+    className: "gps-marker",
+  }).addTo(map);
+} else {
+  gpsMarker.setLatLng(latlng);
+}
+
 
           // pulserende beam
           if (!gpsPulseCircle) {
