@@ -220,6 +220,17 @@ const googleHybrid = L.tileLayer(
   }
 );
 
+        // Geomorfologie laag (PDOK)
+const geomorf = L.tileLayer.wms(
+  "https://service.pdok.nl/bzk/geomorfologie/wms/v1_0?",
+  {
+    layers: "geomorfologie",
+    format: "image/png",
+    transparent: true,
+    attribution: "Geomorfologische Kaart via PDOK"
+  }
+);
+
 const baseLayers = {
   "OpenStreetMap": osm,
   "Google Satellite Hybrid": googleHybrid
@@ -227,7 +238,9 @@ const baseLayers = {
 
 const overlays = {
   "AHN DTM 0.5m (PDOK)": ahnWms,
+  "Geomorfologie (PDOK)": geomorf
 };
+
 
 
         const layerControl = L.control.layers(baseLayers, overlays, {
