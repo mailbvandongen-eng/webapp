@@ -162,7 +162,14 @@
           margin-top: 116px;
           margin-right: 6px;
         }
+       /* brute force fix: alle gps-markers donker maken, ongeacht inline styles */
+.leaflet-interactive.gps-marker {
+  stroke: #000b7a !important;
+  fill: #0033ff !important;
+}
+ 
       }
+    
     </style>
   </head>
   <body>
