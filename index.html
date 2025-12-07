@@ -59,23 +59,24 @@
 
       /* GPS toggle knop */
       .gps-toggle {
-        position: absolute;
-        right: 12px;
-        top: 60px;
-        z-index: 1000;
-        border: none;
-        border-radius: 999px;
-        padding: 8px 18px;
-        font-size: 15px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #f9fafb;
-        transition: background 0.15s ease, transform 0.1s ease,
-          box-shadow 0.15s ease;
-      }
+  position: absolute;
+  right: 12px;
+  top: 60px;
+  z-index: 1000;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 10px;   /* was 8px 18px */
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center; /* bolletje netjes in het midden */
+  color: #f9fafb;
+  transition: background 0.15s ease, transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
 
       .gps-toggle span.gps-dot {
         width: 12px;
