@@ -235,6 +235,21 @@
           collapsed: true,
         }).addTo(map);
 
+        // HILLSHADE LAYER
+const hillshade = L.tileLayer
+  .wms("https://service.pdok.nl/rws/ahn/wms/v1_0?", {
+    layers: "dtm_05m",
+    format: "image/png",
+    transparent: true,
+  })
+  .hillshade({
+    altitude: 45,
+    azimuth: 315,
+    exaggeration: 1.3,
+    opacity: 0.7,
+  });
+
+        
         // Lagenselector: na wijziging weer dichtklappen
         map.on("baselayerchange", () => layerControl.collapse());
         map.on("overlayadd", () => layerControl.collapse());
