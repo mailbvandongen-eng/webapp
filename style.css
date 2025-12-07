@@ -1,0 +1,18 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#map {
+  width: 100%;
+  height: 100vh;
+}
+
+/* Kleine basis-opmaak voor latere UI */
+.map {
+  position: relative;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
