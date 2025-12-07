@@ -227,9 +227,11 @@
           OpenStreetMap: osm,
         };
 
-        const overlays = {
-          "AHN DTM 0.5m (PDOK)": ahnWms,
-        };
+       const overlays = {
+  "AHN DTM 0.5m (PDOK)": ahnWms,
+  "Hillshade": hillshade,
+};
+
 
         const layerControl = L.control.layers(baseLayers, overlays, {
           collapsed: true,
