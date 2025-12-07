@@ -7,7 +7,7 @@
     <!-- Belangrijk voor mobiel -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Probeer caching zo veel mogelijk uit te zetten voor index.html -->
+    <!-- Cache zo veel mogelijk uit voor index.html -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -103,38 +103,14 @@
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
       }
 
-      /* GPS marker (stip) – donkerder en compact */
-      .gps-marker {
-        stroke-width: 3px;
-      }
-
-      /* Pulserende ring rondom baken – donkerder en compact */
-      .gps-pulse {
-        stroke: #1e3a8a;
-        fill: rgba(37, 99, 235, 0.2);
-        animation: gps-pulse 1.8s infinite;
-      }
-
-      /* Animeren via 'r' van de circle */
-      @keyframes gps-pulse {
-        0% {
-          r: 8;
-          opacity: 0.7;
-        }
-        100% {
-          r: 18;
-          opacity: 0;
-        }
-      }
-
-      /* Leaflet controls iets groter, klik-gedrag */
+      /* Leaflet controls iets groter */
       .leaflet-control-container .leaflet-control {
         border-radius: 6px;
         overflow: hidden;
         font-size: 14px;
       }
 
-      /* Zorg dat layer control onder de GPS-knop zit */
+      /* Layer control onder GPS-knop */
       .leaflet-top.leaflet-right {
         margin-top: 120px;
         margin-right: 10px;
@@ -153,7 +129,7 @@
         height: 38px !important;
       }
 
-      /* Eigen control over in-/uitklappen: geen hover-gedrag, alleen klik */
+      /* Alleen op klik uit-/inklappen, geen rare hover */
       .leaflet-control-layers .leaflet-control-layers-list {
         display: none;
       }
@@ -191,7 +167,7 @@
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Build 4 – AHN + GPS</div>
+        <div class="app-subtitle">Build 5 – AHN + GPS</div>
       </header>
 
       <div id="map"></div>
@@ -203,11 +179,11 @@
       </button>
     </div>
 
-    <!-- Leaflet JS (met een simpele cache-buster query) -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=4"></script>
+    <!-- Leaflet JS + simpele cache buster -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=5"></script>
 
     <script>
-      console.log("Detectorkaart V2 build 4 geladen");
+      console.log("Detectorkaart V2 build 5 geladen");
 
       document.addEventListener("DOMContentLoaded", () => {
         const map = L.map("map", {
@@ -246,97 +222,123 @@
         };
 
         const layerControl = L.control.layers(baseLayers, overlays, {
-          collapsed: true, // standaard dicht
+          collapsed: true,
         }).addTo(map);
 
-        // Na wijziging (input change): layercontrol weer dichtklappen
-        function wireLayerControlCollapse() {
+        // Na een keuze: control weer dicht
+        (function wireLayerControlCollapse() {
           const container = layerControl.getContainer();
-          const inputs = container.querySelectorAll("input");
-
-          inputs.forEach((inp) => {
-            inp.addEventListener("change", () => {
-              setTimeout(() => {
-                layerControl.collapse();
-              }, 150);
-            });
+          container.addEventListener("click", (e) => {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "LABEL") {
+              setTimeout(() => layerControl.collapse(), 150);
+            }
           });
-        }
+        })();
 
-        wireLayerControlCollapse();
-
-        // ---- GPS: marker + pulse + accuracy ----
+        // ---- GPS: marker + JS-pulse + accuracy ----
         let gpsMarker = null;
         let gpsAccuracyCircle = null;
         let gpsPulseCircle = null;
-        let gpsHasFix = false; // ooit fix gehad?
-        let gpsTracking = false; // toggle status
+        let gpsPulseTimer = null;
+        let gpsHasFix = false;
+        let gpsTracking = false;
 
-        function createOrUpdateGpsGraphics(latlng, accuracy) {
-          // donkere, compacte stip
+        function startPulse(latlng) {
+          stopPulse();
+
+          gpsPulseCircle = L.circle(latlng, {
+            radius: 8,
+            color: "#001a72",
+            weight: 1,
+            fillColor: "#0033ff",
+            fillOpacity: 0.4,
+            interactive: false,
+          }).addTo(map);
+
+          let r = 8;
+          const maxR = 30;
+
+          gpsPulseTimer = setInterval(() => {
+            if (!gpsPulseCircle) return;
+            r += 0.8;
+            if (r > maxR) r = 8;
+            const rel = (r - 8) / (maxR - 8);
+            const opacity = 0.6 * (1 - rel);
+            gpsPulseCircle.setRadius(r);
+            gpsPulseCircle.setStyle({
+              opacity,
+              fillOpacity: opacity * 0.8,
+            });
+          }, 40);
+        }
+
+        function stopPulse() {
+          if (gpsPulseTimer) {
+            clearInterval(gpsPulseTimer);
+            gpsPulseTimer = null;
+          }
+          if (gpsPulseCircle) {
+            map.removeLayer(gpsPulseCircle);
+            gpsPulseCircle = null;
+          }
+        }
+
+        function updateGpsGraphics(latlng, accuracy) {
+          // donkere compacte stip
           if (!gpsMarker) {
             gpsMarker = L.circleMarker(latlng, {
-              radius: 8,
+              radius: 7,
               weight: 3,
-              color: "#1e3a8a", // donkerblauwe rand
-              fillColor: "#1d4ed8", // stevige blauwe vulling
-              fillOpacity: 0.95,
-              className: "gps-marker",
+              color: "#000b7a", // bijna navy
+              fillColor: "#0033ff", // hard blauw
+              fillOpacity: 1,
             }).addTo(map);
           } else {
             gpsMarker.setLatLng(latlng);
-          }
-
-          // pulserende ring
-          if (!gpsPulseCircle) {
-            gpsPulseCircle = L.circleMarker(latlng, {
-              radius: 8,
-              weight: 0,
-              fillOpacity: 0.6,
-              className: "gps-pulse",
-            }).addTo(map);
-          } else {
-            gpsPulseCircle.setLatLng(latlng);
           }
 
           // accuracy cirkel
           if (!gpsAccuracyCircle) {
             gpsAccuracyCircle = L.circle(latlng, {
               radius: accuracy || 20,
-              color: "#93c5fd",
+              color: "#1d4ed8",
               weight: 1,
-              fillColor: "#bfdbfe",
-              fillOpacity: 0.15,
+              fillColor: "#60a5fa",
+              fillOpacity: 0.2,
             }).addTo(map);
           } else {
             gpsAccuracyCircle.setLatLng(latlng);
             gpsAccuracyCircle.setRadius(accuracy || 20);
           }
+
+          // pulse
+          if (!gpsPulseCircle) {
+            startPulse(latlng);
+          } else {
+            gpsPulseCircle.setLatLng(latlng);
+          }
         }
 
-        function removeGpsGraphics() {
+        function clearGpsGraphics() {
           if (gpsMarker) {
             map.removeLayer(gpsMarker);
             gpsMarker = null;
-          }
-          if (gpsPulseCircle) {
-            map.removeLayer(gpsPulseCircle);
-            gpsPulseCircle = null;
           }
           if (gpsAccuracyCircle) {
             map.removeLayer(gpsAccuracyCircle);
             gpsAccuracyCircle = null;
           }
+          stopPulse();
         }
 
         function onLocationFound(e) {
           if (!gpsTracking) return;
 
-          createOrUpdateGpsGraphics(e.latlng, e.accuracy);
+          updateGpsGraphics(e.latlng, e.accuracy);
 
           if (!gpsHasFix) {
             gpsHasFix = true;
-            map.setView(e.latlng, 17); // direct naar je locatie
+            map.setView(e.latlng, 17); // direct naar fix
           }
         }
 
@@ -356,8 +358,6 @@
           gpsTracking = true;
           gpsHasFix = false;
           map.locate({
-            setView: false,
-            maxZoom: 18,
             watch: true,
             enableHighAccuracy: true,
             timeout: 60000,
@@ -368,7 +368,7 @@
         function stopGpsTracking() {
           gpsTracking = false;
           map.stopLocate();
-          removeGpsGraphics();
+          clearGpsGraphics();
         }
 
         // UI state van de toggle knop
@@ -397,7 +397,6 @@
           });
         }
 
-        // initial UI state
         setGpsUiState(false);
       });
     </script>
