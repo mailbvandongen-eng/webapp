@@ -1,38 +1,397 @@
-<style>
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-  }
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Detectorkaart V2</title>
 
-  /* …nog een berg CSS… */
+    <!-- Belangrijk voor mobiel -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  @media (max-width: 600px) {
-    .app-title {
-      font-size: 14px;
-    }
+    <!-- Cache zo veel mogelijk uit voor index.html -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
-    .app-subtitle {
-      font-size: 10px;
-    }
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 
-    .gps-toggle {
-      top: 58px;
-      right: 8px;
-      padding: 8px 16px;
-      font-size: 14px;
-    }
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
 
-    .leaflet-top.leaflet-right {
-      margin-top: 116px;
-      margin-right: 6px;
-    }
-  }
+      #app {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
 
-  /* HIER DIT BLOK ERONDER PLAKKEN ⬇️ */
-  .leaflet-interactive.gps-marker {
-    stroke: #000b7a !important;
-    fill: #0033ff !important;
-  }
-</style>
+      .app-header {
+        padding: 8px 12px;
+        background: #111827;
+        color: #e5e7eb;
+        border-bottom: 1px solid #1f2937;
+      }
+
+      .app-title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .app-subtitle {
+        font-size: 11px;
+        color: #9ca3af;
+      }
+
+      #map {
+        flex: 1;
+        width: 100%;
+      }
+
+      /* GPS toggle knop */
+      .gps-toggle {
+        position: absolute;
+        right: 12px;
+        top: 60px;
+        z-index: 1000;
+        border: none;
+        border-radius: 999px;
+        padding: 8px 18px;
+        font-size: 15px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #f9fafb;
+        transition: background 0.15s ease, transform 0.1s ease,
+          box-shadow 0.15s ease;
+      }
+
+      .gps-toggle span.gps-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: #f9fafb;
+      }
+
+      .gps-toggle.gps-off {
+        background: #7f1d1d; /* rood */
+      }
+
+      .gps-toggle.gps-on {
+        background: #14532d; /* groen */
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.6);
+      }
+
+      .gps-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      }
+
+      .gps-toggle:active {
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+      }
+
+      /* GPS marker (stip) – hard donkerblauw, override alles */
+      .gps-marker {
+        stroke-width: 3px;
+        stroke: #000b7a !important;  /* bijna navy */
+        fill: #0033ff !important;    /* fel blauw */
+      }
+
+      /* Leaflet controls iets groter */
+      .leaflet-control-container .leaflet-control {
+        border-radius: 6px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      /* Layer control onder GPS-knop */
+      .leaflet-top.leaflet-right {
+        margin-top: 120px;
+        margin-right: 10px;
+      }
+
+      /* Grotere knoppen op touch devices */
+      .leaflet-touch .leaflet-bar a,
+      .leaflet-touch .leaflet-bar a:hover {
+        width: 38px;
+        height: 38px;
+        line-height: 38px;
+      }
+
+      .leaflet-control-layers-toggle {
+        width: 38px !important;
+        height: 38px !important;
+      }
+
+      /* Kleine tweaks voor smalle schermen */
+      @media (max-width: 600px) {
+        .app-title {
+          font-size: 14px;
+        }
+
+        .app-subtitle {
+          font-size: 10px;
+        }
+
+        .gps-toggle {
+          top: 58px;
+          right: 8px;
+          padding: 8px 16px;
+          font-size: 14px;
+        }
+
+        .leaflet-top.leaflet-right {
+          margin-top: 116px;
+          margin-right: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="app-title">Detectorkaart V2</div>
+        <div class="app-subtitle">Build 5.1 – AHN + GPS</div>
+      </header>
+
+      <div id="map"></div>
+
+      <!-- GPS toggle button -->
+      <button id="gps-toggle" class="gps-toggle gps-off" type="button">
+        <span class="gps-dot"></span>
+        <span class="gps-label">GPS uit</span>
+      </button>
+    </div>
+
+    <!-- Leaflet JS + cache buster -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=51"></script>
+
+    <script>
+      console.log("Detectorkaart V2 build 5.1 geladen");
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const map = L.map("map", {
+          zoomControl: true,
+        }).setView([52.07, 4.35], 12); // Den Haag-ish
+
+        // --- Basemap: OSM ---
+        const osm = L.tileLayer(
+          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          {
+            maxZoom: 19,
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+          }
+        );
+        osm.addTo(map);
+
+        // --- AHN DTM 0.5m (PDOK) WMS ---
+        const ahnWms = L.tileLayer.wms(
+          "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+          {
+            layers: "dtm_05m",
+            styles: "default",
+            format: "image/png",
+            transparent: true,
+            attribution: "AHN DTM 0.5m via PDOK",
+          }
+        );
+
+        const baseLayers = {
+          OpenStreetMap: osm,
+        };
+
+        const overlays = {
+          "AHN DTM 0.5m (PDOK)": ahnWms,
+        };
+
+        const layerControl = L.control.layers(baseLayers, overlays, {
+          collapsed: true,
+        }).addTo(map);
+
+        // Lagenselector: na wijziging weer dichtklappen
+        map.on("baselayerchange", () => layerControl.collapse());
+        map.on("overlayadd", () => layerControl.collapse());
+        map.on("overlayremove", () => layerControl.collapse());
+
+        // ---- GPS: marker + JS-pulse + accuracy ----
+        let gpsMarker = null;
+        let gpsAccuracyCircle = null;
+        let gpsPulseCircle = null;
+        let gpsPulseTimer = null;
+        let gpsHasFix = false;
+        let gpsTracking = false;
+
+        function startPulse(latlng) {
+          stopPulse();
+
+          gpsPulseCircle = L.circle(latlng, {
+            radius: 8,
+            color: "#001a72",
+            weight: 1,
+            fillColor: "#0033ff",
+            fillOpacity: 0.4,
+            interactive: false,
+          }).addTo(map);
+
+          let r = 8;
+          const maxR = 30;
+
+          gpsPulseTimer = setInterval(() => {
+            if (!gpsPulseCircle) return;
+            r += 0.8;
+            if (r > maxR) r = 8;
+            const rel = (r - 8) / (maxR - 8);
+            const opacity = 0.6 * (1 - rel);
+            gpsPulseCircle.setRadius(r);
+            gpsPulseCircle.setStyle({
+              opacity,
+              fillOpacity: opacity * 0.8,
+            });
+          }, 40);
+        }
+
+        function stopPulse() {
+          if (gpsPulseTimer) {
+            clearInterval(gpsPulseTimer);
+            gpsPulseTimer = null;
+          }
+          if (gpsPulseCircle) {
+            map.removeLayer(gpsPulseCircle);
+            gpsPulseCircle = null;
+          }
+        }
+
+        function updateGpsGraphics(latlng, accuracy) {
+          // donkere compacte stip met expliciete className
+          if (!gpsMarker) {
+            gpsMarker = L.circleMarker(latlng, {
+              radius: 7,
+              weight: 3,
+              color: "#000b7a",
+              fillColor: "#0033ff",
+              fillOpacity: 1,
+              className: "gps-marker",
+            }).addTo(map);
+          } else {
+            gpsMarker.setLatLng(latlng);
+          }
+
+          // accuracy cirkel
+          if (!gpsAccuracyCircle) {
+            gpsAccuracyCircle = L.circle(latlng, {
+              radius: accuracy || 20,
+              color: "#1d4ed8",
+              weight: 1,
+              fillColor: "#60a5fa",
+              fillOpacity: 0.2,
+            }).addTo(map);
+          } else {
+            gpsAccuracyCircle.setLatLng(latlng);
+            gpsAccuracyCircle.setRadius(accuracy || 20);
+          }
+
+          // pulse starten of verplaatsen
+          if (!gpsPulseCircle) {
+            startPulse(latlng);
+          } else {
+            gpsPulseCircle.setLatLng(latlng);
+          }
+        }
+
+        function clearGpsGraphics() {
+          if (gpsMarker) {
+            map.removeLayer(gpsMarker);
+            gpsMarker = null;
+          }
+          if (gpsAccuracyCircle) {
+            map.removeLayer(gpsAccuracyCircle);
+            gpsAccuracyCircle = null;
+          }
+          stopPulse();
+        }
+
+        function onLocationFound(e) {
+          if (!gpsTracking) return;
+
+          updateGpsGraphics(e.latlng, e.accuracy);
+
+          if (!gpsHasFix) {
+            gpsHasFix = true;
+            map.setView(e.latlng, 17); // direct naar fix
+          }
+        }
+
+        function onLocationError(e) {
+          console.warn("GPS error:", e);
+          alert(
+            "Kon je locatie niet bepalen: " +
+              e.message +
+              "\n\nTip: gebruik HTTPS en geef je browser GPS-rechten."
+          );
+        }
+
+        map.on("locationfound", onLocationFound);
+        map.on("locationerror", onLocationError);
+
+        function startGpsTracking() {
+          gpsTracking = true;
+          gpsHasFix = false;
+          map.locate({
+            watch: true,
+            enableHighAccuracy: true,
+            timeout: 60000,
+            maximumAge: 0,
+          });
+        }
+
+        function stopGpsTracking() {
+          gpsTracking = false;
+          map.stopLocate();
+          clearGpsGraphics();
+        }
+
+        // UI state van de toggle knop
+        const gpsToggleBtn = document.getElementById("gps-toggle");
+        const gpsLabelSpan = gpsToggleBtn.querySelector(".gps-label");
+
+        function setGpsUiState(on) {
+          gpsToggleBtn.classList.toggle("gps-on", on);
+          gpsToggleBtn.classList.toggle("gps-off", !on);
+          gpsLabelSpan.textContent = on ? "GPS aan" : "GPS uit";
+
+          if ("vibrate" in navigator) {
+            navigator.vibrate(on ? 40 : 20);
+          }
+        }
+
+        if (gpsToggleBtn) {
+          gpsToggleBtn.addEventListener("click", () => {
+            const newState = !gpsTracking;
+            if (newState) {
+              startGpsTracking();
+            } else {
+              stopGpsTracking();
+            }
+            setGpsUiState(newState);
+          });
+        }
+
+        setGpsUiState(false);
+      });
+    </script>
+  </body>
+</html>
