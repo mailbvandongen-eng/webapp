@@ -237,7 +237,6 @@ const monumentenLayer = L.layerGroup();
 fetch("data/amk_monumenten.topojson")
   .then(r => r.json())
   .then(topo => {
-    // pak eerste object uit het TopoJSON (naam kan verschillen)
     const objName = Object.keys(topo.objects)[0];
     const geo = topojson.feature(topo, topo.objects[objName]);
 
@@ -263,7 +262,6 @@ fetch("data/amk_monumenten.topojson")
   })
   .catch(err => console.error("AMK TopoJSON fout:", err));
 
-      
 
         const baseLayers = {
           OpenStreetMap: osm,
