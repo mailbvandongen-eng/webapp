@@ -210,14 +210,6 @@
           }
         );
 
-// --- AHN Hillshade (WMTS, zichtbaar in heel NL) ---
-const ahnHillshade = L.tileLayer(
-  "https://service.pdok.nl/rws/ahn/wmts/v1_0/hillshade/EPSG:3857/{z}/{x}/{y}.png",
-  {
-    maxZoom: 19,
-    attribution: "AHN Hillshade via PDOK"
-  }
-);
 
         
         // Google Satellite Hybrid
@@ -249,7 +241,6 @@ const baseLayers = {
 
 const overlays = {
   "AHN DTM 0.5m (PDOK)": ahnWms,
-  "AHN Hillshade (PDOK)": ahnHillshade,
   "Geomorfologie (PDOK)": geomorf
 };
 
