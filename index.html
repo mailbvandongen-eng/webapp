@@ -95,12 +95,13 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script>
+        <script>
       document.addEventListener("DOMContentLoaded", () => {
         const map = L.map("map", {
           zoomControl: true,
         }).setView([52.07, 4.35], 12); // Den Haag-ish
 
+        // --- Basemap: OSM ---
         const osm = L.tileLayer(
           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
           {
@@ -112,6 +113,45 @@
 
         osm.addTo(map);
 
+        // ============= AHN / LiDAR via PDOK (WMS) =============
+        //
+        // LET OP:
+        // 1. Open deze URL in je browser:
+        //    https://service.pdok.nl/rws/ahn/wms/v1_0?SERVICE=WMS&request=GetCapabilities
+        // 2. Zoek in de XML naar een <Layer> met Title zoals "DTM 0.5m" of "AHN4 DTM".
+        // 3. Gebruik de waarde van <Name> als 'layers'-waarde hieronder.
+        //
+        // Voorbeeld-naampje (WAARSCHIJNLIJK anders in werkelijkheid):
+        //  - "ahn4_05m_dtm" of iets in die geest.
+        //
+        // Pas 'layers' hieronder aan naar de echte naam die je daar vindt.
+
+        const ahnWms = L.tileLayer.wms(
+          "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+          {
+            layers: "ahn4_05m_dtm", // <--- HIER de ECHTE laagnaam invullen
+            format: "image/png",
+            transparent: true,
+            attribution: "AHN (LiDAR DTM) via PDOK",
+          }
+        );
+
+        // Zet AHN standaard aan (optioneel, kun je uitzetten)
+        ahnWms.addTo(map);
+
+        // Layer control (rechtsboven)
+        const baseLayers = {
+          OpenStreetMap: osm,
+        };
+
+        const overlays = {
+          "AHN DTM 0.5m (PDOK)": ahnWms,
+        };
+
+        L.control.layers(baseLayers, overlays, { collapsed: false }).addTo(map);
+        // ======================================================
+
+        // ---- GPS-stip + accuracy cirkel ----
         let gpsMarker = null;
         let gpsAccuracyCircle = null;
         let gpsActive = false;
@@ -156,7 +196,12 @@
         }
 
         function onLocationError(e) {
-          alert("Kon je locatie niet bepalen: " + e.message);
+          console.warn("GPS error:", e);
+          alert(
+            "Kon je locatie niet bepalen: " +
+              e.message +
+              "\n\nTip: gebruik HTTPS en geef je browser GPS-rechten."
+          );
         }
 
         map.on("locationfound", onLocationFound);
@@ -168,6 +213,8 @@
             maxZoom: 18,
             watch: true,
             enableHighAccuracy: true,
+            timeout: 60000,
+            maximumAge: 0,
           });
         }
 
@@ -179,5 +226,6 @@
         }
       });
     </script>
+
   </body>
 </html>
