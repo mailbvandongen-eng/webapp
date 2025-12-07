@@ -210,17 +210,15 @@
           }
         );
 
-// --- AHN3 0.5m Hillshade / intensiteit (PDOK) ---
-const ahnHillshade = L.tileLayer.wms(
-  "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+// --- AHN Hillshade (WMTS, zichtbaar in heel NL) ---
+const ahnHillshade = L.tileLayer(
+  "https://service.pdok.nl/rws/ahn/wmts/v1_0/hillshade/EPSG:3857/{z}/{x}/{y}.png",
   {
-    layers: "ahn3_05m_int",
-    styles: "",
-    format: "image/png",
-    transparent: true,
-    attribution: "AHN3 0.5m intensiteit via PDOK"
+    maxZoom: 19,
+    attribution: "AHN Hillshade via PDOK"
   }
 );
+
         
         // Google Satellite Hybrid
 const googleHybrid = L.tileLayer(
@@ -251,10 +249,9 @@ const baseLayers = {
 
 const overlays = {
   "AHN DTM 0.5m (PDOK)": ahnWms,
-  "AHN 0.5m hillshade (PDOK)": ahnHillshade,
+  "AHN Hillshade (PDOK)": ahnHillshade,
   "Geomorfologie (PDOK)": geomorf
 };
-
 
 
 
