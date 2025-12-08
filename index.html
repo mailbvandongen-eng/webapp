@@ -20,110 +20,148 @@
     />
 
     <style>
-      :root {
-        color-scheme: only light !important;
-        forced-color-adjust: none !important;
-      }
+  :root {
+    color-scheme: only light !important;
+    forced-color-adjust: none !important;
+  }
 
-      html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        background: #ffffff !important;
-        font-family: system-ui, sans-serif;
-      }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #ffffff !important;
+    font-family: system-ui, sans-serif;
+  }
 
-      #app {
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        flex-direction: column;
-      }
+  #app {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+  }
 
-      /* --------------------------------------
-         HEADER
-      -------------------------------------- */
-      .app-header {
-        padding: 8px 12px;
-        background: #111827;
-        color: #e5e7eb;
-        border-bottom: 1px solid #1f2937;
-      }
-      .app-title { font-size: 16px; font-weight: 600; }
-      .app-subtitle { font-size: 11px; color: #9ca3af; }
+  /* HEADER */
+  .app-header {
+    padding: 8px 12px;
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+  }
+  .app-title { font-size: 16px; font-weight: 600; }
+  .app-subtitle { font-size: 11px; color: #9ca3af; }
 
-      #map {
-        flex: 1;
-        width: 100%;
-      }
+  #map {
+    flex: 1;
+    width: 100%;
+  }
 
-      /* --------------------------------------
-         MODERN CONTROL BUTTONS (Zoom + GPS)
-      -------------------------------------- */
-      .leaflet-control-zoom a,
-      #gps-toggle {
-        background: #ffffff !important;
-        border: 1px solid #d1d5db;
-        border-radius: 10px;
-        width: 38px;
-        height: 38px;
-        line-height: 38px;
-        text-align: center;
-        color: #111827;
-        font-size: 20px;
-        cursor: pointer;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-      }
+  /* --------------------------------------
+     MODERNE KNOP-STIJL (Zoom + GPS)
+     -------------------------------------- */
 
-      .leaflet-control-zoom a:hover,
-      #gps-toggle:hover {
-        background: #f3f4f6 !important;
-      }
+  /* container van zoom linksboven iets netter */
+  .leaflet-control-zoom {
+    margin-top: 10px !important;
+    margin-left: 10px !important;
+  }
 
-      /* GPS-knop links onder zoom */
-      #gps-toggle {
-        position: absolute;
-        left: 10px;
-        top: 128px; /* precies onder de "-" knop */
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-      }
+  /* losse vierkante knoppen, geen zandloper */
+  .leaflet-control-zoom a {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px !important;
+    width: 38px;
+    height: 38px;
+    line-height: 38px;
+    text-align: center;
+    color: #111827 !important;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    display: block;
+  }
 
-      /* iOS style GPS icoon */
-      #gps-toggle .gps-icon {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 3px solid #1a73e8;
-        background: #1a73e8;
-        box-shadow: 0 0 0 2px white inset;
-      }
+  .leaflet-control-zoom-in {
+    margin-bottom: 6px;   /* ruimte tussen + en − */
+  }
 
-      /* Actieve GPS-knop */
-      #gps-toggle.gps-on {
-        border-color: #1a73e8;
-        box-shadow: 0 0 6px rgba(26, 115, 232, 0.6);
-      }
+  .leaflet-control-zoom a:hover {
+    background: #f3f4f6 !important;
+  }
 
-      /* --------------------------------------
-         LAYER CONTROL MODERN STYLE
-      -------------------------------------- */
-      .leaflet-control-layers {
-        background: #ffffff !important;
-        border: 1px solid #d1d5db !important;
-        border-radius: 10px !important;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
-        padding: 6px !important;
-      }
+  /* GPS-knop: zelfde stijl als zoom, maar eigen positie */
+  #gps-toggle {
+    position: absolute;
+    left: 10px;
+    top: 100px;            /* netjes onder de − knop */
+    z-index: 1000;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
 
-      .leaflet-top.leaflet-right {
-        margin-top: 60px !important; /* zelfde hoogte als zoom links */
-        margin-right: 10px !important;
-      }
-    </style>
+  #gps-toggle:hover {
+    background: #f3f4f6;
+  }
+
+  /* grijs iOS-achtige locatie-cirkel in de knop */
+  #gps-toggle .gps-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #6b7280;   /* mooi grijs */
+    box-sizing: border-box;
+  }
+
+  /* als GPS aan staat: subtiele highlight van de knop */
+  #gps-toggle.gps-on {
+    border-color: #2563eb;
+    box-shadow: 0 0 6px rgba(37,99,235,0.5);
+  }
+
+  /* --------------------------------------
+     LAYER CONTROL RECHTSBOVEN
+     -------------------------------------- */
+
+  /* positie container rechtsboven gelijk aan zoom-links */
+  .leaflet-top.leaflet-right {
+    margin-top: 10px !important;   /* zelfde top als zoom */
+    margin-right: 10px !important;
+  }
+
+  .leaflet-control-layers {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  /* de toggle zelf als nette knop, zelfde formaat */
+  .leaflet-control-layers-toggle {
+    width: 38px !important;
+    height: 38px !important;
+    background-color: #ffffff !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-size: 22px 22px !important;
+    border-radius: 10px !important;
+    border: 1px solid #d1d5db !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+  }
+
+  .leaflet-control-layers-toggle:hover {
+    background-color: #f3f4f6 !important;
+  }
+</style>
+
   </head>
 
   <body>
