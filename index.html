@@ -222,12 +222,12 @@ html, body {
 }
 
 /* ============================================================
-   BUILD LABEL – linksonder
+   BUILD LABEL – linksonder (veilig voor mobiele navigatiebalk)
    ============================================================ */
 .build-label {
   position: absolute;
   left: 10px;
-  bottom: 10px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
   font-size: 10px;
   color: #6b7280;
   background: rgba(255,255,255,0.9);
@@ -248,11 +248,12 @@ html, body {
       <div class="icon"></div>
     </button>
 
-    <!-- Opacity toggle + panel -->
+    <!-- Opacity toggle -->
     <button id="opacity-toggle" class="control-button" type="button">
       <div class="icon"></div>
     </button>
 
+    <!-- Opacity panel (popup) -->
     <div id="opacity-panel" class="hidden">
       <div class="opacity-control-title">Lagen transparant</div>
 
@@ -283,6 +284,7 @@ html, body {
 
 <script>
 console.log("Detectorkaart V2 – Build 7.8 geladen");
+
 
 /* ============================================================
    KAART INIT – zonder zoomControl
