@@ -1,421 +1,399 @@
 <!DOCTYPE html>
 <html lang="nl">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Detectorkaart V2 – Build 7.3</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Detectorkaart V2 – Build 7.4</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="madelinus.png" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="madelinus.png" />
 
-    <!-- Cache uit -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+  <!-- Cache uit -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
-    <!-- Leaflet CSS -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <style>
-  :root {
-    color-scheme: only light !important;
-    forced-color-adjust: none !important;
-  }
+/* ============================================================
+   BASIS & FUNDAMENT
+   ============================================================ */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #ffffff;
+  font-family: system-ui, sans-serif;
+}
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #ffffff !important;
-    font-family: system-ui, sans-serif;
-  }
+#app {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* -------------------------
-   * FUNDAMENT FIX — BELANGRIJK
-   * ------------------------- */
-  #app {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-  }
+#map {
+  flex: 1;
+  width: 100%;
+}
 
-  #map {
-    flex: 1;
-    width: 100%;
-  }
+/* ============================================================
+   ZOOM CONTROLS – strak, modern, clean
+   ============================================================ */
 
-  /* -----------------------------------------------------------
-   * ZOOM KNOPPEN – Modern, clean, geen borders, geen zandloper
-   * ----------------------------------------------------------- */
+.leaflet-control-zoom {
+  margin-top: 10px !important;
+  margin-left: 10px !important;
+}
 
-  .leaflet-control-zoom {
-    margin-top: 10px !important;
-    margin-left: 10px !important;
-  }
+.leaflet-control-zoom a {
+  width: 38px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 
-  .leaflet-control-zoom a {
-    width: 38px;
-    height: 38px;
-    line-height: 38px;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+  font-size: 20px !important;
+  color: #111 !important;
 
-    font-size: 20px !important;
-    color: #111 !important;
-    
-    background: #ffffff !important;
-    border-radius: 10px !important;
-    border: none !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+}
 
-    cursor: pointer;
-  }
+.leaflet-control-zoom-in {
+  margin-bottom: 6px !important;
+}
 
-  .leaflet-control-zoom-in { margin-bottom: 6px; }
+.leaflet-control-zoom a:hover {
+  background: #f3f4f6 !important;
+}
 
-  .leaflet-control-zoom a:hover {
-    background: #f3f4f6 !important;
-  }
+/* ============================================================
+   GPS KNOP — exact uitgelijnd + iOS stijl
+   ============================================================ */
 
-  /* -----------------------------------------------------------
-   * GPS KNOP — EXACT gelijk formaat en spacing als zoom-knoppen
-   * ----------------------------------------------------------- */
+#gps-toggle {
+  position: absolute;
+  left: 10px;
+  top: calc(10px + 38px + 6px + 38px + 6px); /* + en - + spacing */
 
-  #gps-toggle {
-    position: absolute;
-    left: 10px;
-    top: calc(10px + 38px + 6px + 38px + 6px); 
-    /* = top van zoomcontainer + plusknop + tussenruimte + minknop + tussenruimte */
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
 
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+  background: #ffffff;
+  border: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
 
-    background: #ffffff;
-    border: none;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  padding: 0;
+  z-index: 9999;
+}
 
-    padding: 0;
-    cursor: pointer;
-    z-index: 9999;
-  }
+#gps-toggle:hover {
+  background: #f3f4f6;
+}
 
-  #gps-toggle:hover {
-    background: #f3f4f6;
-  }
+/* GPS icoon – UIT (grijs) */
+#gps-toggle .gps-icon {
+  width: 22px;
+  height: 22px;
 
-  /* GPS icoon normaal (UIT): druppelvorm, grijs */
-  #gps-toggle .gps-icon {
-    width: 20px;
-    height: 20px;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 20px 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px 22px;
 
-    /* grijze druppel / locate pin */
-    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='%236b7280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
-  }
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%236b7280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
+}
 
-  /* GPS AAN: icoon blauw + subtiele glow */
-  #gps-toggle.gps-on .gps-icon {
-    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='%232563EB' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
-  }
+/* GPS icoon – AAN (blauw) */
+#gps-toggle.gps-on .gps-icon {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%232563EB' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
+}
 
-  #gps-toggle.gps-on {
-    box-shadow: 0 0 6px rgba(37,99,235,0.55);
-  }
+#gps-toggle.gps-on {
+  box-shadow: 0 0 6px rgba(37,99,235,0.55);
+}
 
-  /* -----------------------------------------------------------
-   * LAYER CONTROL — rechtsboven, exact uitlijnen met + knop
-   * ----------------------------------------------------------- */
+/* ============================================================
+   LAYER CONTROL — perfect uitgelijnd, clean
+   ============================================================ */
 
-  .leaflet-top.leaflet-right {
-    margin-top: 10px !important;
-    margin-right: 10px !important;
-  }
+.leaflet-top.leaflet-right {
+  margin-top: 10px !important;
+  margin-right: 10px !important;
+}
 
-  .leaflet-control-layers {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
+.leaflet-control-layers {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
 
-  .leaflet-control-layers-toggle {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 10px !important;
+.leaflet-control-layers-toggle {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
 
-    background: #ffffff !important;
-    background-size: 22px 22px !important;
-    background-position: center !important;
+  background: #ffffff !important;
+  background-size: 22px 22px !important;
+  background-position: center !important;
 
-    border: none !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.22) !important;
-  }
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22) !important;
+}
 
-  .leaflet-control-layers-toggle:hover {
-    background: #f3f4f6 !important;
-  }
+.leaflet-control-layers-toggle:hover {
+  background: #f3f4f6 !important;
+}
 
-  /* De uitgeklapte lijst volledig wit, niet transparant */
-  .leaflet-control-layers-expanded {
-    background: #ffffff !important;
-    border-radius: 10px !important;
-    border: 1px solid #e5e7eb !important;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
-    padding: 8px !important;
-  }
+.leaflet-control-layers-expanded {
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  padding: 8px !important;
+}
 
-  .leaflet-control-layers-list {
-    background: #ffffff !important;
-  }
+.leaflet-control-layers-list {
+  background: #ffffff !important;
+}
 </style>
+</head>
 
-  </head>
-
-  <body>
-    <div id="app">
-      <header class="app-header">
-        <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">
-          Build 7.3 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS
-        </div>
-      </header>
-
-      <div id="map"></div>
-
-      <!-- GPS knop -->
-      <button id="gps-toggle" class="gps-toggle gps-off" type="button">
-        <div class="gps-icon"></div>
-      </button>
+<body>
+<div id="app">
+  <header class="app-header">
+    <div class="app-title">Detectorkaart V2</div>
+    <div class="app-subtitle">
+      Build 7.4 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS
     </div>
+  </header>
 
-    <!-- JS libs -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/topojson-client@3"></script>
+  <div id="map"></div>
 
-    <script>
-      console.log("Detectorkaart V2 – Build 7.3 geladen");
+  <!-- GPS knop -->
+  <button id="gps-toggle" class="gps-off" type="button">
+    <div class="gps-icon"></div>
+  </button>
+</div>
 
-      /* --------------------------------------
-         KAART INIT
-      -------------------------------------- */
-      const map = L.map("map").setView([52.07, 4.35], 12);
+<!-- JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
 
-      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { maxZoom: 19 }
-      ).addTo(map);
+<script>
+console.log("Detectorkaart V2 – Build 7.4 geladen");
 
-      const googleHybrid = L.tileLayer(
-        "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-        { maxZoom: 20 }
-      );
+/* ============================================================
+   KAART INIT
+   ============================================================ */
+const map = L.map("map").setView([52.07, 4.35], 12);
 
-      /* --------------------------------------
-         PDOK LAGEN
-      -------------------------------------- */
-      const ahnWms = L.tileLayer.wms(
-        "https://service.pdok.nl/rws/ahn/wms/v1_0?",
-        { layers: "dtm_05m", format: "image/png", transparent: true }
-      );
+const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  { maxZoom: 19 }
+).addTo(map);
 
-      const geomorf = L.tileLayer.wms(
-        "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
-        { layers: "geomorphological_area", format: "image/png", transparent: true }
-      );
+const googleHybrid = L.tileLayer(
+  "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+  { maxZoom: 20 }
+);
 
-      /* --------------------------------------
-         AMK MONUMENTEN
-      -------------------------------------- */
-      const amkLayer = L.layerGroup();
-      fetch("data/amk_monumenten.topojson")
-        .then(r => r.json())
-        .then(topo => {
-          const name = Object.keys(topo.objects)[0];
-          const geo = topojson.feature(topo, topo.objects[name]);
-          const layer = L.geoJSON(geo, {
-            style: { color: "#a855f7", weight: 1, fillOpacity: 0.25 },
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(`<b>${p.Naam ?? p.MONUMENTNR ?? "Monument"}</b>`);
-            }
-          });
-          amkLayer.addLayer(layer);
-        });
+/* ============================================================
+   PDOK
+   ============================================================ */
+const ahnWms = L.tileLayer.wms(
+  "https://service.pdok.nl/rws/ahn/wms/v1_0?",
+  { layers: "dtm_05m", format: "image/png", transparent: true }
+);
 
-      /* --------------------------------------
-         EIGEN MONUMENTEN
-      -------------------------------------- */
-      const customMonLayer = L.layerGroup();
-      fetch("data/monumenten_custom.geojson")
-        .then(r => r.json())
-        .then(geo => {
-          const layer = L.geoJSON(geo, {
-            style: {
-              color: "#9333ea",
-              fillColor: "#c4b5fd",
-              fillOpacity: 0.35,
-              weight: 1.2
-            },
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(`<b>${p.Naam}</b><br>${p.Omschrijving ?? ""}`);
-            }
-          });
-          customMonLayer.addLayer(layer);
-        });
+const geomorf = L.tileLayer.wms(
+  "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
+  { layers: "geomorphological_area", format: "image/png", transparent: true }
+);
 
-      /* --------------------------------------
-         VONDSTEN
-      -------------------------------------- */
-      const puntenLayer = L.layerGroup();
-      fetch("data/punten_custom.geojson")
-        .then(r => r.json())
-        .then(geo => {
-          const layer = L.geoJSON(geo, {
-            pointToLayer: (f, latlng) =>
-              L.circleMarker(latlng, {
-                radius: 5, color: "#7c3aed",
-                fillColor: "#a78bfa", fillOpacity: 0.9
-              }),
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(`<b>${p.Naam}</b><br>${p.Omschrijving ?? ""}`);
-            }
-          });
-          puntenLayer.addLayer(layer);
-        });
+/* ============================================================
+   LAAG: AMK
+   ============================================================ */
+const amkLayer = L.layerGroup();
+fetch("data/amk_monumenten.topojson")
+  .then(r => r.json())
+  .then(topo => {
+    const name = Object.keys(topo.objects)[0];
+    const geo = topojson.feature(topo, topo.objects[name]);
+    const layer = L.geoJSON(geo, {
+      style: { color: "#a855f7", weight: 1, fillOpacity: 0.25 }
+    });
+    amkLayer.addLayer(layer);
+  });
 
-      /* --------------------------------------
-         TOESTEMMINGEN (✔)
-      -------------------------------------- */
-      const toestLayer = L.layerGroup();
-      function makeToestIcon(zoom) {
-        const size = Math.max(12, Math.min(22, zoom * 1.2));
-        return L.divIcon({
-          html: `<div style="font-size:${size}px;
-                 color:#22c55e;font-weight:bold;
-                 text-shadow:0 0 2px black;">✔</div>`,
-          iconSize: [size, size], iconAnchor: [size/2, size/2]
-        });
+/* ============================================================
+   LAAG: Eigen monumenten
+   ============================================================ */
+const customMonLayer = L.layerGroup();
+fetch("data/monumenten_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      style: {
+        color: "#9333ea",
+        fillColor: "#c4b5fd",
+        fillOpacity: 0.35,
+        weight: 1.2
       }
-      fetch("data/toestemmingen_custom.geojson")
-        .then(r => r.json())
-        .then(geo => {
-          const layer = L.geoJSON(geo, {
-            pointToLayer: (f, latlng) =>
-              L.marker(latlng, { icon: makeToestIcon(map.getZoom()) }),
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(`<b>Toestemming</b><br>${p.Naam}`);
-            }
-          });
-          toestLayer.addLayer(layer);
-          map.on("zoomend", () =>
-            layer.eachLayer(m =>
-              m.setIcon(makeToestIcon(map.getZoom()))
-            )
-          );
-        });
+    });
+    customMonLayer.addLayer(layer);
+  });
 
-      /* --------------------------------------
-         ROM. PUNTEN + LINIEN
-      -------------------------------------- */
-      const romPtsLayer = L.layerGroup();
-      fetch("data/rom_def_points.geojson")
-        .then(r => r.json())
-        .then(geo => {
-          const layer = L.geoJSON(geo, {
-            pointToLayer: (f, latlng) =>
-              L.circleMarker(latlng, {
-                radius: 6, color: "#001f54",
-                fillColor: "#003b99", fillOpacity: 0.9
-              }),
-          });
-          romPtsLayer.addLayer(layer);
-        });
+/* ============================================================
+   LAAG: Vondsten
+   ============================================================ */
+const puntenLayer = L.layerGroup();
+fetch("data/punten_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.circleMarker(latlng, {
+          radius: 5,
+          color: "#7c3aed",
+          fillColor: "#a78bfa",
+          fillOpacity: 0.9
+        })
+    });
+    puntenLayer.addLayer(layer);
+  });
 
-      const romLineLayer = L.layerGroup();
-      fetch("data/rom_def_lines.geojson")
-        .then(r => r.json())
-        .then(geo => {
-          const layer = L.geoJSON(geo, {
-            style: { color: "#001b44", weight: 3, opacity: 0.9 }
-          });
-          romLineLayer.addLayer(layer);
-        });
+/* ============================================================
+   LAAG: Toestemmingen
+   ============================================================ */
+const toestLayer = L.layerGroup();
+function makeToestIcon(zoom) {
+  const size = Math.max(12, Math.min(22, zoom * 1.2));
+  return L.divIcon({
+    html: `<div style="font-size:${size}px;color:#22c55e;font-weight:bold;text-shadow:0 0 2px black;">✔</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
 
-      /* --------------------------------------
-         LAAGSELECTOR
-      -------------------------------------- */
-      const baseLayers = {
-        "OpenStreetMap": osm,
-        "Google Hybrid": googleHybrid
-      };
+fetch("data/toestemmingen_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.marker(latlng, { icon: makeToestIcon(map.getZoom()) })
+    });
+    toestLayer.addLayer(layer);
 
-      const overlays = {
-        "AHN 0.5m": ahnWms,
-        "Geomorfologie": geomorf,
-        "AMK Monumenten": amkLayer,
-        "Eigen monumenten": customMonLayer,
-        "Vondsten": puntenLayer,
-        "Toestemmingen": toestLayer,
-        "Romeinse punten": romPtsLayer,
-        "Romeinse lijnen": romLineLayer
-      };
+    map.on("zoomend", () =>
+      layer.eachLayer(m => m.setIcon(makeToestIcon(map.getZoom())))
+    );
+  });
 
-      L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+/* ============================================================
+   LAAG: Romeinse punten + lijnen
+   ============================================================ */
+const romPtsLayer = L.layerGroup();
+fetch("data/rom_def_points.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.circleMarker(latlng, {
+          radius: 6,
+          color: "#001f54",
+          fillColor: "#003b99",
+          fillOpacity: 0.9
+        })
+    });
+    romPtsLayer.addLayer(layer);
+  });
 
-      /* --------------------------------------
-         GPS (Optie B – iOS stijl)
-      -------------------------------------- */
-      let tracking = false;
+const romLineLayer = L.layerGroup();
+fetch("data/rom_def_lines.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      style: { color: "#001b44", weight: 3, opacity: 0.9 }
+    });
+    romLineLayer.addLayer(layer);
+  });
 
-      let gpsMarker = L.circleMarker([52.07, 4.35], {
-        radius: 6,
-        color: "#1a73e8",
-        fillColor: "#1a73e8",
-        fillOpacity: 1,
-        weight: 2
-      }).addTo(map);
+/* ============================================================
+   LAYER SELECTOR
+   ============================================================ */
+const baseLayers = {
+  "OpenStreetMap": osm,
+  "Google Hybrid": googleHybrid
+};
 
-      let gpsAccuracy = L.circle([52.07, 4.35], {
-        radius: 0,
-        color: "#1a73e8",
-        fillOpacity: 0.15
-      }).addTo(map);
+const overlays = {
+  "AHN 0.5m": ahnWms,
+  "Geomorfologie": geomorf,
+  "AMK Monumenten": amkLayer,
+  "Eigen monumenten": customMonLayer,
+  "Vondsten": puntenLayer,
+  "Toestemmingen": toestLayer,
+  "Romeinse punten": romPtsLayer,
+  "Romeinse lijnen": romLineLayer
+};
 
-      function updateGps(latlng, acc) {
-        gpsMarker.setLatLng(latlng);
-        gpsAccuracy.setLatLng(latlng);
-        gpsAccuracy.setRadius(acc);
-      }
+L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
-      map.on("locationfound", (e) => {
-        if (!tracking) return;
-        updateGps(e.latlng, e.accuracy);
-      });
+/* ============================================================
+   GPS (Optie B)
+   ============================================================ */
+let tracking = false;
 
-      const gpsBtn = document.getElementById("gps-toggle");
-      gpsBtn.addEventListener("click", () => {
-        tracking = !tracking;
-        gpsBtn.classList.toggle("gps-on", tracking);
+let gpsMarker = L.circleMarker([52.07, 4.35], {
+  radius: 6,
+  color: "#1a73e8",
+  fillColor: "#1a73e8",
+  fillOpacity: 1,
+  weight: 2
+}).addTo(map);
 
-        if (tracking) {
-          map.locate({ watch: true, enableHighAccuracy: true });
-        } else {
-          map.stopLocate();
-        }
-      });
-    </script>
-  </body>
+let gpsAccuracy = L.circle([52.07, 4.35], {
+  radius: 0,
+  color: "#1a73e8",
+  fillOpacity: 0.15
+}).addTo(map);
+
+function updateGps(latlng, acc) {
+  gpsMarker.setLatLng(latlng);
+  gpsAccuracy.setLatLng(latlng);
+  gpsAccuracy.setRadius(acc);
+}
+
+map.on("locationfound", (e) => {
+  if (!tracking) return;
+  updateGps(e.latlng, e.accuracy);
+});
+
+const gpsBtn = document.getElementById("gps-toggle");
+gpsBtn.addEventListener("click", () => {
+  tracking = !tracking;
+  gpsBtn.classList.toggle("gps-on", tracking);
+
+  if (tracking) {
+    map.locate({ watch: true, enableHighAccuracy: true });
+  } else {
+    map.stopLocate();
+  }
+});
+</script>
+
+</body>
 </html>
