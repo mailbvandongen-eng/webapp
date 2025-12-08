@@ -260,21 +260,21 @@
         })
         .catch((err) => console.error("punten_custom fout:", err));
 
-      // ----------------------------------
-// Toestemmingen – ✔ icoontje, zoom-aware en subtiel
+     // ----------------------------------
+// Toestemmingen – ✔ icoontje (helder groen, zoom-aware, subtiel)
 // ----------------------------------
 const toestLayer = L.layerGroup();
 
 function makeToestemmingIcon(zoom) {
-  // schaal afhankelijk van zoomniveau
-  const size = Math.max(12, Math.min(22, zoom * 1.2));  
+  const size = Math.max(12, Math.min(22, zoom * 1.2));  // schaal mee met zoom
   return L.divIcon({
     className: "toestemming-icon",
     html: `<div style="
       font-size:${size}px;
       line-height:1;
-      color:#0ea5e9;      /* helder blauwgroen */
-      text-shadow: 0 0 2px black;
+      color:#22c55e;        /* helder groen */
+      text-shadow: 0 0 2px black; /* voor zichtbaarheid overal */
+      font-weight:bold;
     ">✔</div>`,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2]
@@ -300,7 +300,7 @@ fetch("data/toestemmingen_custom.geojson")
 
     toestLayer.addLayer(layer);
 
-    // update icoontje bij zoom → blijft subtiel!
+    // icoon mee laten schalen met zoom
     map.on("zoomend", () => {
       layer.eachLayer(marker => {
         if (marker.setIcon) {
@@ -309,8 +309,9 @@ fetch("data/toestemmingen_custom.geojson")
       });
     });
 
-    console.log("Toestemmingen geladen met ✔ icoontjes");
+    console.log("Toestemmingen geladen met ✔ helder groene icons");
   });
+
 
 
       // ================================
