@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Detectorkaart V2 – Build 7.7</title>
+  <title>Detectorkaart V2 – Build 7.8</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon -->
@@ -13,7 +13,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
-  <!-- Light mode hint -->
+  <!-- Light-only hints -->
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#ffffff" />
 
@@ -22,9 +22,9 @@
 
 <style>
 /* ============================================================
-   HARD LIGHT MODE – zoveel mogelijk dark mode killen
+   HARD LIGHT MODE – dark mode zoveel mogelijk killen
    ============================================================ */
-*, html, body {
+* {
   color-scheme: light !important;
   forced-color-adjust: none !important;
 }
@@ -35,6 +35,7 @@ html, body {
   height: 100%;
   background: #ffffff !important;
   font-family: system-ui, sans-serif;
+  color: #111827;
 }
 
 #app {
@@ -46,6 +47,14 @@ html, body {
 #map {
   height: 100%;
   width: 100%;
+}
+
+/* Extra safeguard voor devices met agressieve force-dark */
+@media (prefers-color-scheme: dark) {
+  html, body, #app, #map, .leaflet-container {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+  }
 }
 
 /* ============================================================
@@ -103,7 +112,7 @@ html, body {
 }
 
 /* ============================================================
-   LAYER CONTROL – rechtsboven, uitgelijnd
+   LAYER CONTROL – rechtsboven, iets hoger & uitgelijnd
    ============================================================ */
 .leaflet-top.leaflet-right {
   top: 10px !important;
@@ -115,9 +124,9 @@ html, body {
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  margin-top: 0 !important; /* voorkomt extra ruimte */
 }
 
-/* Toggle-knop zelf */
 .leaflet-control-layers-toggle {
   width: 38px !important;
   height: 38px !important;
@@ -130,7 +139,7 @@ html, body {
   background-position: center !important;
   background-size: 22px 22px !important;
 
-  /* custom layers-icoon (stapeltje blokjes) */
+  /* custom layers-icoon */
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%23111827' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8L12 4L20 8L12 12L4 8Z'/%3E%3Cpath d='M4 12L12 16L20 12' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3Cpath d='M4 16L12 20L20 16' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3C/svg%3E") !important;
 }
 
@@ -161,7 +170,7 @@ html, body {
   bottom: 10px;
 }
 
-/* Nieuw icoon: stapel lagen, bovenste transparant */
+/* icoon: stapel lagen, bovenste transparanter */
 #opacity-toggle .icon {
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='fade' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%23111827' stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 9L12 5L20 9L12 13L4 9Z' fill='url(%23fade)' stroke='%23111827' stroke-width='1'/%3E%3Cpath d='M6 13L12 16L18 13' fill='none' stroke='%23111827' stroke-width='1.3'/%3E%3Cpath d='M6 16.5L12 19.5L18 16.5' fill='none' stroke='%23111827' stroke-width='1.3'/%3E%3C/svg%3E");
 }
@@ -221,7 +230,7 @@ html, body {
   bottom: 10px;
   font-size: 10px;
   color: #6b7280;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.9);
   padding: 3px 8px;
   border-radius: 999px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.15);
@@ -265,7 +274,7 @@ html, body {
     </div>
 
     <!-- Build label -->
-    <div class="build-label">Build 7.7</div>
+    <div class="build-label">Build 7.8</div>
   </div>
 
   <!-- JS -->
@@ -273,7 +282,7 @@ html, body {
   <script src="https://unpkg.com/topojson-client@3"></script>
 
 <script>
-console.log("Detectorkaart V2 – Build 7.7 geladen");
+console.log("Detectorkaart V2 – Build 7.8 geladen");
 
 /* ============================================================
    KAART INIT – zonder zoomControl
@@ -509,16 +518,28 @@ if (geomSlider) {
 }
 
 /* ============================================================
-   OPACITY PANEL TOGGLE
+   OPACITY PANEL TOGGLE + click-buiten-om sluit paneel
    ============================================================ */
 const opacityToggle = document.getElementById("opacity-toggle");
 const opacityPanel  = document.getElementById("opacity-panel");
 
 if (opacityToggle && opacityPanel) {
-  opacityToggle.addEventListener("click", () => {
+  opacityToggle.addEventListener("click", (ev) => {
+    ev.stopPropagation();
     const isHidden = opacityPanel.classList.contains("hidden");
     opacityPanel.classList.toggle("hidden", !isHidden);
     opacityToggle.classList.toggle("opacity-on", isHidden);
+  });
+
+  document.addEventListener("click", (ev) => {
+    if (opacityPanel.classList.contains("hidden")) return;
+
+    const target = ev.target;
+    if (opacityPanel.contains(target)) return;
+    if (opacityToggle.contains(target)) return;
+
+    opacityPanel.classList.add("hidden");
+    opacityToggle.classList.remove("opacity-on");
   });
 }
 </script>
