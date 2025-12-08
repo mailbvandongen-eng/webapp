@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Detectorkaart V2 – Build 7.5</title>
+  <title>Detectorkaart V2 – Build 7.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon -->
@@ -18,13 +18,28 @@
 
 <style>
 /* ============================================================
+   HARD LIGHT MODE – forceer wit, geen dark bullshit
+   ============================================================ */
+*, html, body, #map {
+  color-scheme: light !important;
+  forced-color-adjust: none !important;
+  background: #ffffff !important;
+}
+
+/* Extra fallback voor browsers met prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background: #ffffff !important;
+  }
+}
+
+/* ============================================================
    BASIS & FUNDAMENT
    ============================================================ */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #ffffff;
   font-family: system-ui, sans-serif;
 }
 
@@ -40,7 +55,7 @@ html, body {
   width: 100%;
 }
 
-/* Header (simpel maar functioneel) */
+/* Header */
 .app-header {
   padding: 8px 12px;
   background: #111827;
@@ -59,83 +74,52 @@ html, body {
 }
 
 /* ============================================================
-   ZOOM CONTROLS – strak, modern, clean
+   GENERIC CONTROL BUTTON – GPS / opacity toggle
    ============================================================ */
-
-.leaflet-control-zoom {
-  margin-top: 10px !important;
-  margin-left: 10px !important;
-}
-
-.leaflet-control-zoom a {
-  width: 38px !important;
-  height: 38px !important;
-  line-height: 38px !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-
-  font-size: 20px !important;
-  color: #111 !important;
-
-  background: #ffffff !important;
-  border-radius: 10px !important;
-  border: none !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
-}
-
-.leaflet-control-zoom-in {
-  margin-bottom: 6px !important;
-}
-
-.leaflet-control-zoom a:hover {
-  background: #f3f4f6 !important;
-}
-
-/* ============================================================
-   GPS KNOP — exact uitgelijnd + iOS stijl
-   ============================================================ */
-
-#gps-toggle {
-  position: absolute;
-  left: 10px;
-  top: calc(10px + 38px + 6px + 38px + 6px); /* + en - + spacing */
-
+.control-button {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-
   background: #ffffff;
   border: none;
   box-shadow: 0 1px 4px rgba(0,0,0,0.22);
-
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-
   padding: 0;
+  cursor: pointer;
   z-index: 9999;
 }
 
-#gps-toggle:hover {
+.control-button:hover {
   background: #f3f4f6;
 }
 
-/* GPS icoon – UIT (grijs) */
-#gps-toggle .gps-icon {
+/* Icon binnen de knop */
+.control-button .icon {
   width: 22px;
   height: 22px;
-
   background-repeat: no-repeat;
   background-position: center;
   background-size: 22px 22px;
+}
 
+/* ============================================================
+   GPS KNOP – linksboven
+   ============================================================ */
+#gps-toggle {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+
+/* GPS icoon – UIT (grijs) */
+#gps-toggle .icon {
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%236b7280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
 }
 
 /* GPS icoon – AAN (blauw) */
-#gps-toggle.gps-on .gps-icon {
+#gps-toggle.gps-on .icon {
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%232563EB' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
 }
 
@@ -144,9 +128,8 @@ html, body {
 }
 
 /* ============================================================
-   LAYER CONTROL — perfect uitgelijnd, clean
+   LAYER CONTROL – rechtsboven, zelfde stylo
    ============================================================ */
-
 .leaflet-top.leaflet-right {
   margin-top: 10px !important;
   margin-right: 10px !important;
@@ -159,23 +142,28 @@ html, body {
   padding: 0 !important;
 }
 
+/* Toggle-knop zelf */
 .leaflet-control-layers-toggle {
   width: 38px !important;
   height: 38px !important;
   border-radius: 10px !important;
-
-  background: #ffffff !important;
-  background-size: 22px 22px !important;
-  background-position: center !important;
-
   border: none !important;
   box-shadow: 0 1px 4px rgba(0,0,0,0.22) !important;
+  background-color: #ffffff !important;
+
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 22px 22px !important;
+
+  /* custom layers-icoon (stapeltje blokjes) */
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%23111827' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8L12 4L20 8L12 12L4 8Z'/%3E%3Cpath d='M4 12L12 16L20 12' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3Cpath d='M4 16L12 20L20 16' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3C/svg%3E") !important;
 }
 
 .leaflet-control-layers-toggle:hover {
-  background: #f3f4f6 !important;
+  background-color: #f3f4f6 !important;
 }
 
+/* Uitgeklapte lijst */
 .leaflet-control-layers-expanded {
   background: #ffffff !important;
   border-radius: 10px !important;
@@ -186,24 +174,44 @@ html, body {
 
 .leaflet-control-layers-list {
   background: #ffffff !important;
+  font-size: 11px;
 }
 
 /* ============================================================
-   OPACITY PANEL (AHN + Geomorf)
+   OPACITY PANEL – rechtsonder, ingeklapt standaard
    ============================================================ */
-
-.opacity-control {
+#opacity-toggle {
   position: absolute;
-  left: 10px;
+  right: 10px;
   bottom: 10px;
+}
+
+#opacity-toggle .icon {
+  /* sliders-icoon */
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%23111827' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 7H19' stroke='%23111827' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='7' r='2'/%3E%3Cpath d='M5 12H19' stroke='%23111827' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='15' cy='12' r='2'/%3E%3Cpath d='M5 17H19' stroke='%23111827' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='11' cy='17' r='2'/%3E%3C/svg%3E");
+}
+
+#opacity-toggle.opacity-on {
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* Paneel zelf */
+#opacity-panel {
+  position: absolute;
+  right: 10px;
+  bottom: 56px; /* 38 knop + marge */
   padding: 8px 10px;
-  background: rgba(255,255,255,0.95);
+  background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.22);
   font-size: 11px;
   color: #111827;
   z-index: 9999;
   min-width: 150px;
+}
+
+.hidden {
+  display: none;
 }
 
 .opacity-control-title {
@@ -215,7 +223,7 @@ html, body {
 .opacity-row {
   display: flex;
   flex-direction: column;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .opacity-row label {
@@ -236,19 +244,23 @@ html, body {
   <header class="app-header">
     <div class="app-title">Detectorkaart V2</div>
     <div class="app-subtitle">
-      Build 7.5 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS + opacity
+      Build 7.6 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS + opacity
     </div>
   </header>
 
   <div id="map"></div>
 
   <!-- GPS knop -->
-  <button id="gps-toggle" class="gps-off" type="button">
-    <div class="gps-icon"></div>
+  <button id="gps-toggle" class="control-button gps-off" type="button">
+    <div class="icon"></div>
   </button>
 
-  <!-- Opacity panel -->
-  <div class="opacity-control">
+  <!-- Opacity toggle + panel -->
+  <button id="opacity-toggle" class="control-button" type="button">
+    <div class="icon"></div>
+  </button>
+
+  <div id="opacity-panel" class="hidden">
     <div class="opacity-control-title">Lagen transparant</div>
 
     <div class="opacity-row">
@@ -274,14 +286,17 @@ html, body {
 <script src="https://unpkg.com/topojson-client@3"></script>
 
 <script>
-console.log("Detectorkaart V2 – Build 7.5 geladen");
+console.log("Detectorkaart V2 – Build 7.6 geladen");
 
 /* ============================================================
-   KAART INIT
+   KAART INIT – zonder zoomControl
    ============================================================ */
-const map = L.map("map").setView([52.07, 4.35], 12);
+const map = L.map("map", {
+  zoomControl: false
+}).setView([52.07, 4.35], 12);
 
-const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+const osm = L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   { maxZoom: 19 }
 ).addTo(map);
 
@@ -303,12 +318,12 @@ const geomorf = L.tileLayer.wms(
   { layers: "geomorphological_area", format: "image/png", transparent: true }
 );
 
-/* Zet start-opacities */
+/* Start-opacities */
 ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   LAAG: AMK
+   AMK
    ============================================================ */
 const amkLayer = L.layerGroup();
 fetch("data/amk_monumenten.topojson")
@@ -323,7 +338,7 @@ fetch("data/amk_monumenten.topojson")
   });
 
 /* ============================================================
-   LAAG: Eigen monumenten
+   Eigen monumenten
    ============================================================ */
 const customMonLayer = L.layerGroup();
 fetch("data/monumenten_custom.geojson")
@@ -341,7 +356,7 @@ fetch("data/monumenten_custom.geojson")
   });
 
 /* ============================================================
-   LAAG: Vondsten
+   Vondsten
    ============================================================ */
 const puntenLayer = L.layerGroup();
 fetch("data/punten_custom.geojson")
@@ -360,7 +375,7 @@ fetch("data/punten_custom.geojson")
   });
 
 /* ============================================================
-   LAAG: Toestemmingen
+   Toestemmingen
    ============================================================ */
 const toestLayer = L.layerGroup();
 function makeToestIcon(zoom) {
@@ -387,7 +402,7 @@ fetch("data/toestemmingen_custom.geojson")
   });
 
 /* ============================================================
-   LAAG: Romeinse punten + lijnen
+   Romeinse punten & lijnen
    ============================================================ */
 const romPtsLayer = L.layerGroup();
 fetch("data/rom_def_points.geojson")
@@ -416,7 +431,7 @@ fetch("data/rom_def_lines.geojson")
   });
 
 /* ============================================================
-   LAYER SELECTOR
+   LAYER CONTROL
    ============================================================ */
 const baseLayers = {
   "OpenStreetMap": osm,
@@ -437,7 +452,7 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS (Optie B)
+   GPS TRACKING
    ============================================================ */
 let tracking = false;
 
@@ -466,6 +481,10 @@ map.on("locationfound", (e) => {
   updateGps(e.latlng, e.accuracy);
 });
 
+map.on("locationerror", (e) => {
+  alert("GPS fout: " + e.message);
+});
+
 const gpsBtn = document.getElementById("gps-toggle");
 gpsBtn.addEventListener("click", () => {
   tracking = !tracking;
@@ -479,12 +498,12 @@ gpsBtn.addEventListener("click", () => {
 });
 
 /* ============================================================
-   OPACITY SLIDERS – AHN & Geomorf
+   OPACITY SLIDERS
    ============================================================ */
-const ahnSlider = document.getElementById("ahn-opacity");
+const ahnSlider  = document.getElementById("ahn-opacity");
 const geomSlider = document.getElementById("geomorf-opacity");
-const ahnValue = document.getElementById("ahn-opacity-value");
-const geomValue = document.getElementById("geomorf-opacity-value");
+const ahnValue   = document.getElementById("ahn-opacity-value");
+const geomValue  = document.getElementById("geomorf-opacity-value");
 
 if (ahnSlider) {
   ahnSlider.addEventListener("input", (e) => {
@@ -499,6 +518,20 @@ if (geomSlider) {
     const v = Number(e.target.value);
     geomorf.setOpacity(v / 100);
     if (geomValue) geomValue.textContent = `${v}%`;
+  });
+}
+
+/* ============================================================
+   OPACITY PANEL TOGGLE
+   ============================================================ */
+const opacityToggle = document.getElementById("opacity-toggle");
+const opacityPanel  = document.getElementById("opacity-panel");
+
+if (opacityToggle && opacityPanel) {
+  opacityToggle.addEventListener("click", () => {
+    const isHidden = opacityPanel.classList.contains("hidden");
+    opacityPanel.classList.toggle("hidden", !isHidden);
+    opacityToggle.classList.toggle("opacity-on", isHidden);
   });
 }
 </script>
