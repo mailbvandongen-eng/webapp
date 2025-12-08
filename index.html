@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Detectorkaart V2 – Build 7.4</title>
+  <title>Detectorkaart V2 – Build 7.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon -->
@@ -38,6 +38,24 @@ html, body {
 #map {
   flex: 1;
   width: 100%;
+}
+
+/* Header (simpel maar functioneel) */
+.app-header {
+  padding: 8px 12px;
+  background: #111827;
+  color: #e5e7eb;
+  border-bottom: 1px solid #1f2937;
+}
+
+.app-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app-subtitle {
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 /* ============================================================
@@ -169,6 +187,47 @@ html, body {
 .leaflet-control-layers-list {
   background: #ffffff !important;
 }
+
+/* ============================================================
+   OPACITY PANEL (AHN + Geomorf)
+   ============================================================ */
+
+.opacity-control {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+  font-size: 11px;
+  color: #111827;
+  z-index: 9999;
+  min-width: 150px;
+}
+
+.opacity-control-title {
+  font-weight: 600;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.opacity-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+
+.opacity-row label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.opacity-row input[type="range"] {
+  width: 100%;
+}
 </style>
 </head>
 
@@ -177,7 +236,7 @@ html, body {
   <header class="app-header">
     <div class="app-title">Detectorkaart V2</div>
     <div class="app-subtitle">
-      Build 7.4 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS
+      Build 7.5 – AMK + eigen monumenten + vondsten + geomorf + AHN + GPS + opacity
     </div>
   </header>
 
@@ -187,6 +246,27 @@ html, body {
   <button id="gps-toggle" class="gps-off" type="button">
     <div class="gps-icon"></div>
   </button>
+
+  <!-- Opacity panel -->
+  <div class="opacity-control">
+    <div class="opacity-control-title">Lagen transparant</div>
+
+    <div class="opacity-row">
+      <label for="ahn-opacity">
+        <span>AHN</span>
+        <span id="ahn-opacity-value">70%</span>
+      </label>
+      <input id="ahn-opacity" type="range" min="0" max="100" value="70" />
+    </div>
+
+    <div class="opacity-row">
+      <label for="geomorf-opacity">
+        <span>Geomorf</span>
+        <span id="geomorf-opacity-value">50%</span>
+      </label>
+      <input id="geomorf-opacity" type="range" min="0" max="100" value="50" />
+    </div>
+  </div>
 </div>
 
 <!-- JS -->
@@ -194,7 +274,7 @@ html, body {
 <script src="https://unpkg.com/topojson-client@3"></script>
 
 <script>
-console.log("Detectorkaart V2 – Build 7.4 geladen");
+console.log("Detectorkaart V2 – Build 7.5 geladen");
 
 /* ============================================================
    KAART INIT
@@ -222,6 +302,10 @@ const geomorf = L.tileLayer.wms(
   "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
   { layers: "geomorphological_area", format: "image/png", transparent: true }
 );
+
+/* Zet start-opacities */
+ahnWms.setOpacity(0.7);
+geomorf.setOpacity(0.5);
 
 /* ============================================================
    LAAG: AMK
@@ -393,6 +477,30 @@ gpsBtn.addEventListener("click", () => {
     map.stopLocate();
   }
 });
+
+/* ============================================================
+   OPACITY SLIDERS – AHN & Geomorf
+   ============================================================ */
+const ahnSlider = document.getElementById("ahn-opacity");
+const geomSlider = document.getElementById("geomorf-opacity");
+const ahnValue = document.getElementById("ahn-opacity-value");
+const geomValue = document.getElementById("geomorf-opacity-value");
+
+if (ahnSlider) {
+  ahnSlider.addEventListener("input", (e) => {
+    const v = Number(e.target.value);
+    ahnWms.setOpacity(v / 100);
+    if (ahnValue) ahnValue.textContent = `${v}%`;
+  });
+}
+
+if (geomSlider) {
+  geomSlider.addEventListener("input", (e) => {
+    const v = Number(e.target.value);
+    geomorf.setOpacity(v / 100);
+    if (geomValue) geomValue.textContent = `${v}%`;
+  });
+}
 </script>
 
 </body>
