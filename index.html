@@ -436,41 +436,64 @@ fetch("data/toestemmingen_custom.geojson")
 
       L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
-      // ================================
-      // GPS
-      // ================================
-      let gpsMarker = null;
-      let gpsAccuracy = null;
-      let tracking = false;
+   // ================================
+// GPS – Pulsing Marker versie
+// ================================
+let tracking = false;
 
-      function updateGps(latlng, acc) {
-        if (!gpsMarker) {
-          gpsMarker = L.circleMarker(latlng, {
-            radius: 7,
-            weight: 3,
-            className: "gps-marker",
-          }).addTo(map);
-        } else {
-          gpsMarker.setLatLng(latlng);
-        }
+// Permanente pulserende GPS-marker
+let gpsMarker = L.marker([52.07, 4.35], {
+  icon: L.divIcon({
+    className: "pulse",
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  })
+}).addTo(map);
 
-        if (!gpsAccuracy) {
-          gpsAccuracy = L.circle(latlng, {
-            radius: acc,
-            color: "#1d4ed8",
-            fillOpacity: 0.15,
-          }).addTo(map);
-        } else {
-          gpsAccuracy.setLatLng(latlng);
-          gpsAccuracy.setRadius(acc);
-        }
-      }
+gpsMarker.setZIndexOffset(9999);
 
-      map.on("locationfound", (e) => {
-        if (!tracking) return;
-        updateGps(e.latlng, e.accuracy);
-        map.setView(e.latlng, 17);
-      });
+// Permanente accuracy-circle
+let gpsAccuracy = L.circle([52.07, 4.35], {
+  radius: 0,
+  color: "#1d4ed8",
+  fillOpacity: 0.15,
+}).addTo(map);
+
+// Updaten van locatie
+function updateGps(latlng, acc) {
+  gpsMarker.setLatLng(latlng);
+  gpsAccuracy.setLatLng(latlng);
+  gpsAccuracy.setRadius(acc);
+}
+
+// GPS event handlers
+map.on("locationfound", (e) => {
+  if (!tracking) return;
+  updateGps(e.latlng, e.accuracy);
+  map.setView(e.latlng, 17);
+});
+
+map.on("locationerror", (e) => alert("GPS fout: " + e.message));
+
+// GPS-knop
+const gpsBtn = document.getElementById("gps-toggle");
+const gpsLabel = gpsBtn.querySelector(".gps-label");
+
+gpsBtn.addEventListener("click", () => {
+  tracking = !tracking;
+  gpsBtn.classList.toggle("gps-on", tracking);
+  gpsBtn.classList.toggle("gps-off", !tracking);
+  gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
+
+  if (tracking) {
+    map.locate({ watch: true, enableHighAccuracy: true });
+  } else {
+    map.stopLocate();
+    // Marker blijft staan — geen verwijdering meer!
+    gpsAccuracy.setRadius(0); // eventueel laten staan als cirkel
+  }
+});
+
 
       map.on("locationerror", (e) => alert("GPS fout: " + e.message));
 
