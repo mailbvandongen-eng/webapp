@@ -473,48 +473,6 @@ map.on("locationfound", (e) => {
   map.setView(e.latlng, 17);
 });
 
-map.on("locationerror", (e) => alert("GPS fout: " + e.message));
-
-// GPS-knop
-const gpsBtn = document.getElementById("gps-toggle");
-const gpsLabel = gpsBtn.querySelector(".gps-label");
-
-gpsBtn.addEventListener("click", () => {
-  tracking = !tracking;
-  gpsBtn.classList.toggle("gps-on", tracking);
-  gpsBtn.classList.toggle("gps-off", !tracking);
-  gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
-
-  if (tracking) {
-    map.locate({ watch: true, enableHighAccuracy: true });
-  } else {
-    map.stopLocate();
-    // Marker blijft staan — geen verwijdering meer!
-    gpsAccuracy.setRadius(0); // eventueel laten staan als cirkel
-  }
-});
-
-
-      map.on("locationerror", (e) => alert("GPS fout: " + e.message));
-
-      const gpsBtn = document.getElementById("gps-toggle");
-      const gpsLabel = gpsBtn.querySelector(".gps-label");
-
-      gpsBtn.addEventListener("click", () => {
-        tracking = !tracking;
-        gpsBtn.classList.toggle("gps-on", tracking);
-        gpsBtn.classList.toggle("gps-off", !tracking);
-        gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
-
-        if (tracking) {
-          map.locate({ watch: true, enableHighAccuracy: true });
-       } else {
-  map.stopLocate();
-  // NIET verwijderen, marker houdt laatste locatie vast
-  tracking = false;
-}
-
-      });
     </script>
   </body>
 </html>
