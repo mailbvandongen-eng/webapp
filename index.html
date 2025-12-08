@@ -18,8 +18,7 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
-
-    <style>
+<style>
   :root {
     color-scheme: only light !important;
     forced-color-adjust: none !important;
@@ -33,107 +32,97 @@
     font-family: system-ui, sans-serif;
   }
 
-  #app {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* HEADER */
-  .app-header {
-    padding: 8px 12px;
-    background: #111827;
-    color: #e5e7eb;
-    border-bottom: 1px solid #1f2937;
-  }
-  .app-title { font-size: 16px; font-weight: 600; }
-  .app-subtitle { font-size: 11px; color: #9ca3af; }
-
-  #map {
-    flex: 1;
-    width: 100%;
-  }
-
-  /* --------------------------------------
-     MODERNE KNOP-STIJL (Zoom + GPS)
-     -------------------------------------- */
-
-  /* container van zoom linksboven iets netter */
+  /* -----------------------------------------------------------
+   * ZOOM KNOPPEN – Modern, clean, geen borders, geen zandloper
+   * ----------------------------------------------------------- */
   .leaflet-control-zoom {
     margin-top: 10px !important;
     margin-left: 10px !important;
   }
 
-  /* losse vierkante knoppen, geen zandloper */
   .leaflet-control-zoom a {
-    background: #ffffff !important;
-    border: 1px solid #d1d5db !important;
-    border-radius: 10px !important;
     width: 38px;
     height: 38px;
     line-height: 38px;
-    text-align: center;
-    color: #111827 !important;
-    font-size: 20px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px !important;
+    color: #111 !important;
+    
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    border: none !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-    display: block;
   }
 
-  .leaflet-control-zoom-in {
-    margin-bottom: 6px;   /* ruimte tussen + en − */
-  }
+  .leaflet-control-zoom-in { margin-bottom: 6px; }
 
   .leaflet-control-zoom a:hover {
     background: #f3f4f6 !important;
   }
 
-  /* GPS-knop: zelfde stijl als zoom, maar eigen positie */
+  /* -----------------------------------------------------------
+   * GPS KNOP — EXACT gelijk formaat en spacing als zoom-knoppen
+   * ----------------------------------------------------------- */
+
   #gps-toggle {
     position: absolute;
     left: 10px;
-    top: 100px;            /* netjes onder de − knop */
-    z-index: 1000;
+    top: calc(10px + 38px + 6px + 38px + 6px); 
+    /* = top van zoomcontainer + plusknop + tussenruimte + minknop + tussenruimte */
+
     width: 38px;
     height: 38px;
     border-radius: 10px;
-    border: 1px solid #d1d5db;
+
     background: #ffffff;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
-    padding: 0;
+    border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+
     display: flex;
     align-items: center;
     justify-content: center;
+
+    padding: 0;
     cursor: pointer;
+    z-index: 9999;
   }
 
   #gps-toggle:hover {
     background: #f3f4f6;
   }
 
-  /* grijs iOS-achtige locatie-cirkel in de knop */
+  /* GPS icoon normaal (UIT): druppelvorm, grijs */
   #gps-toggle .gps-icon {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #6b7280;   /* mooi grijs */
-    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 20px 20px;
+
+    /* grijze druppel / locate pin */
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='%236b7280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
   }
 
-  /* als GPS aan staat: subtiele highlight van de knop */
+  /* GPS AAN: icoon blauw + subtiele glow */
+  #gps-toggle.gps-on .gps-icon {
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' viewBox='0 0 24 24' fill='%232563EB' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
+  }
+
   #gps-toggle.gps-on {
-    border-color: #2563eb;
-    box-shadow: 0 0 6px rgba(37,99,235,0.5);
+    box-shadow: 0 0 6px rgba(37,99,235,0.55);
   }
 
-  /* --------------------------------------
-     LAYER CONTROL RECHTSBOVEN
-     -------------------------------------- */
+  /* -----------------------------------------------------------
+   * LAYER CONTROL — rechtsboven, exact uitlijnen met + knop
+   * ----------------------------------------------------------- */
 
-  /* positie container rechtsboven gelijk aan zoom-links */
   .leaflet-top.leaflet-right {
-    margin-top: 10px !important;   /* zelfde top als zoom */
+    margin-top: 10px !important;
     margin-right: 10px !important;
   }
 
@@ -144,21 +133,34 @@
     padding: 0 !important;
   }
 
-  /* de toggle zelf als nette knop, zelfde formaat */
   .leaflet-control-layers-toggle {
     width: 38px !important;
     height: 38px !important;
-    background-color: #ffffff !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    background-size: 22px 22px !important;
     border-radius: 10px !important;
-    border: 1px solid #d1d5db !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+
+    background: #ffffff !important;
+    background-size: 22px 22px !important;
+    background-position: center !important;
+
+    border: none !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.22) !important;
   }
 
   .leaflet-control-layers-toggle:hover {
-    background-color: #f3f4f6 !important;
+    background: #f3f4f6 !important;
+  }
+
+  /* De uitgeklapte lijst volledig wit, niet transparant */
+  .leaflet-control-layers-expanded {
+    background: #ffffff !important;
+    border-radius: 10px !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+    padding: 8px !important;
+  }
+
+  .leaflet-control-layers-list {
+    background: #ffffff !important;
   }
 </style>
 
