@@ -2,7 +2,7 @@
 <html lang="nl">
   <head>
     <meta charset="UTF-8" />
-    <title>Detectorkaart V2 – Build 7.1</title>
+    <title>Detectorkaart V2 – Build 7.2</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -11,16 +11,17 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
-   <style>
-    :root {
-      color-scheme: only light !important;
-      forced-color-adjust: none !important;
-    }
-    html, body {
-      background: #ffffff !important;
-    }
-  </style>
-    
+    <!-- Donkere modus fix -->
+    <style>
+      :root {
+        color-scheme: only light !important;
+        forced-color-adjust: none !important;
+      }
+      html, body {
+        background: #ffffff !important;
+      }
+    </style>
+
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
@@ -28,8 +29,7 @@
     />
 
     <style>
-      html,
-      body {
+      html, body {
         margin: 0;
         padding: 0;
         height: 100%;
@@ -50,15 +50,8 @@
         border-bottom: 1px solid #1f2937;
       }
 
-      .app-title {
-        font-size: 16px;
-        font-weight: 600;
-      }
-
-      .app-subtitle {
-        font-size: 11px;
-        color: #9ca3af;
-      }
+      .app-title { font-size: 16px; font-weight: 600; }
+      .app-subtitle { font-size: 11px; color: #9ca3af; }
 
       #map {
         flex: 1;
@@ -81,53 +74,18 @@
         color: #f9fafb;
       }
 
-      .gps-toggle.gps-off {
-        background: #7f1d1d;
+      .gps-toggle.gps-off { background: #7f1d1d; }
+      .gps-toggle.gps-on { background: #14532d; }
+
+      /* Subtiele Google Maps GPS dot */
+      .gps-dot {
+        width: 12px;
+        height: 12px;
+        background: #1a73e8;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 0 4px rgba(0,0,0,0.35);
       }
-
-      .gps-toggle.gps-on {
-        background: #14532d;
-      }
-
-      .gps-marker {
-        stroke-width: 3px;
-        stroke: #000b7a !important;
-        fill: #0033ff !important;
-      }
-
-      /* Pulserende GPS-marker */
-.pulse {
-  width: 14px;
-  height: 14px;
-  background: #0033ff;
-  border: 3px solid #000b7a;
-  border-radius: 50%;
-  position: relative;
-  box-sizing: content-box;
-}
-
-.pulse::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  left: -3px;
-  top: -3px;
-  border-radius: 50%;
-  background: rgba(0, 51, 255, 0.35);
-  animation: pulseAnim 2s infinite ease-out;
-}
-
-@keyframes pulseAnim {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  100% {
-    transform: scale(2.4);
-    opacity: 0;
-  }
-}
 
       .leaflet-top.leaflet-right {
         margin-top: 120px;
@@ -141,7 +99,7 @@
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
         <div class="app-subtitle">
-          Build 7.1 – AMK + mijn monumenten + vondsten + geomorf + AHN + GPS
+          Build 7.2 – AMK + eigen lagen + geomorf + AHN + GPS SmoothFollow
         </div>
       </header>
 
@@ -157,7 +115,7 @@
     <script src="https://unpkg.com/topojson-client@3"></script>
 
     <script>
-      console.log("Detectorkaart V2 – Build 7.1 geladen");
+      console.log("Detectorkaart V2 – Build 7.2 geladen");
 
       // ================================
       // Kaart init
@@ -197,13 +155,13 @@
       );
 
       // ================================
-      // AMK – landelijke monumenten (TopoJSON)
+      // AMK – landelijke monumenten
       // ================================
       const amkLayer = L.layerGroup();
 
       fetch("data/amk_monumenten.topojson")
-        .then((r) => r.json())
-        .then((topo) => {
+        .then(r => r.json())
+        .then(topo => {
           const name = Object.keys(topo.objects)[0];
           const geo = topojson.feature(topo, topo.objects[name]);
 
@@ -211,25 +169,21 @@
             style: { color: "#a855f7", weight: 1, fillOpacity: 0.25 },
             onEachFeature: (f, l) => {
               const p = f.properties || {};
-              const naam = p.Naam ?? p.MONUMENTNR ?? "Monument";
-              const oms = p.Omschrijving ?? p.WAARDE ?? "";
-              l.bindPopup(`<b>${naam}</b><br>${oms}`);
-            },
+              l.bindPopup(`<b>${p.Naam ?? p.MONUMENTNR ?? "Monument"}</b><br>${p.Omschrijving ?? p.WAARDE ?? ""}`);
+            }
           });
 
           amkLayer.addLayer(layer);
-          console.log("AMK monumenten geladen:", name);
-        })
-        .catch((err) => console.error("AMK monumenten fout:", err));
+        });
 
       // ================================
-      // Eigen monumenten (monumenten_custom.geojson)
+      // Eigen monumenten
       // ================================
       const customMonLayer = L.layerGroup();
 
       fetch("data/monumenten_custom.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
+        .then(r => r.json())
+        .then(geo => {
           const layer = L.geoJSON(geo, {
             style: {
               color: "#9333ea",
@@ -239,25 +193,20 @@
             },
             onEachFeature: (f, l) => {
               const p = f.properties || {};
-              const naam = p.Naam || "Monument";
-              const oms = p.Omschrijving || "(geen omschrijving)";
-              l.bindPopup(`<b>${naam}</b><br>${oms}`);
-            },
+              l.bindPopup(`<b>${p.Naam}</b><br>${p.Omschrijving}`);
+            }
           });
-
           customMonLayer.addLayer(layer);
-          console.log("Eigen monumenten geladen");
-        })
-        .catch((err) => console.error("Eigen monumenten fout:", err));
+        });
 
       // ================================
-      // Oppida (oppida.geojson)
+      // Oppida
       // ================================
       const oppidaLayer = L.layerGroup();
 
       fetch("data/oppida.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
+        .then(r => r.json())
+        .then(geo => {
           const layer = L.geoJSON(geo, {
             pointToLayer: (f, latlng) =>
               L.circleMarker(latlng, {
@@ -267,23 +216,20 @@
                 fillOpacity: 0.9,
               }),
             onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(`<b>Oppidum</b><br>${p.Naam ?? ""}`);
-            },
+              l.bindPopup(`<b>Oppidum</b><br>${f.properties.Naam ?? ""}`);
+            }
           });
           oppidaLayer.addLayer(layer);
-          console.log("Oppida geladen");
-        })
-        .catch((err) => console.error("Oppida fout:", err));
+        });
 
       // ================================
-      // Vondsten – punten_custom.geojson
+      // Vondsten
       // ================================
       const puntenLayer = L.layerGroup();
 
       fetch("data/punten_custom.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
+        .then(r => r.json())
+        .then(geo => {
           const layer = L.geoJSON(geo, {
             pointToLayer: (f, latlng) =>
               L.circleMarker(latlng, {
@@ -293,80 +239,64 @@
                 fillOpacity: 0.9,
               }),
             onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(
-                `<b>${p.Naam ?? "Vondst"}</b><br>${p.Omschrijving ?? ""}`
-              );
-            },
+              l.bindPopup(`<b>${f.properties.Naam}</b><br>${f.properties.Omschrijving}`);
+            }
           });
           puntenLayer.addLayer(layer);
-          console.log("Vondsten (punten_custom) geladen");
-        })
-        .catch((err) => console.error("punten_custom fout:", err));
-
-     // ----------------------------------
-// Toestemmingen – ✔ icoontje (helder groen, zoom-aware, subtiel)
-// ----------------------------------
-const toestLayer = L.layerGroup();
-
-function makeToestemmingIcon(zoom) {
-  const size = Math.max(12, Math.min(22, zoom * 1.2));  // schaal mee met zoom
-  return L.divIcon({
-    className: "toestemming-icon",
-    html: `<div style="
-      font-size:${size}px;
-      line-height:1;
-      color:#22c55e;        /* helder groen */
-      text-shadow: 0 0 2px black; /* voor zichtbaarheid overal */
-      font-weight:bold;
-    ">✔</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2]
-  });
-}
-
-fetch("data/toestemmingen_custom.geojson")
-  .then(r => r.json())
-  .then(geo => {
-    const layer = L.geoJSON(geo, {
-      pointToLayer: (f, latlng) => {
-        return L.marker(latlng, {
-          icon: makeToestemmingIcon(map.getZoom())
         });
-      },
-      onEachFeature: (f, l) => {
-        const p = f.properties || {};
-        l.bindPopup(
-          `<b>Toestemming</b><br>${p.Naam ?? ""}<br>${p.Omschrijving ?? ""}`
-        );
-      }
-    });
-
-    toestLayer.addLayer(layer);
-
-    // icoon mee laten schalen met zoom
-    map.on("zoomend", () => {
-      layer.eachLayer(marker => {
-        if (marker.setIcon) {
-          marker.setIcon(makeToestemmingIcon(map.getZoom()));
-        }
-      });
-    });
-
-    console.log("Toestemmingen geladen met ✔ helder groene icons");
-  });
-
-
 
       // ================================
-      // Romeinse verdedigingswerken – punten (rom_def_points.geojson)
-      // donkerblauw
+      // Toestemmingen – ✔ icoontje
+      // ================================
+      const toestLayer = L.layerGroup();
+
+      function makeToestemmingIcon(zoom) {
+        const size = Math.max(12, Math.min(22, zoom * 1.2));
+        return L.divIcon({
+          className: "toestemming-icon",
+          html: `<div style="
+            font-size:${size}px;
+            line-height:1;
+            color:#22c55e;
+            text-shadow:0 0 2px black;
+            font-weight:bold;
+          ">✔</div>`,
+          iconSize: [size, size],
+          iconAnchor: [size/2, size/2]
+        });
+      }
+
+      fetch("data/toestemmingen_custom.geojson")
+        .then(r => r.json())
+        .then(geo => {
+          const layer = L.geoJSON(geo, {
+            pointToLayer: (f, latlng) =>
+              L.marker(latlng, {
+                icon: makeToestemmingIcon(map.getZoom())
+              }),
+            onEachFeature: (f, l) => {
+              l.bindPopup(`<b>Toestemming</b><br>${f.properties.Naam}<br>${f.properties.Omschrijving}`);
+            }
+          });
+
+          toestLayer.addLayer(layer);
+
+          map.on("zoomend", () => {
+            layer.eachLayer(marker => {
+              if (marker.setIcon) marker.setIcon(makeToestemmingIcon(map.getZoom()));
+            });
+          });
+        });
+
+      // ================================
+      // Romeinse verdedigingswerken
       // ================================
       const romPtsLayer = L.layerGroup();
+      const romLineLayer = L.layerGroup();
 
       fetch("data/rom_def_points.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
+        .then(r => r.json())
+        .then(geo => {
           const layer = L.geoJSON(geo, {
             pointToLayer: (f, latlng) =>
               L.circleMarker(latlng, {
@@ -375,47 +305,29 @@ fetch("data/toestemmingen_custom.geojson")
                 fillColor: "#003b99",
                 fillOpacity: 0.9,
               }),
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(
-                `<b>Romeins verdedigingspunt</b><br>${p.Naam ?? ""}`
-              );
-            },
+            onEachFeature: (f, l) =>
+              l.bindPopup(`<b>Romeins verdedigingspunt</b><br>${f.properties.Naam}`)
           });
           romPtsLayer.addLayer(layer);
-          console.log("Romeinse verdedigingspunten geladen");
-        })
-        .catch((err) => console.error("rom_def_points fout:", err));
-
-      // ================================
-      // Romeinse verdedigingswerken – lijnen (rom_def_lines.geojson)
-      // donkerblauw
-      // ================================
-      const romLineLayer = L.layerGroup();
+        });
 
       fetch("data/rom_def_lines.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
+        .then(r => r.json())
+        .then(geo => {
           const layer = L.geoJSON(geo, {
             style: {
               color: "#001b44",
               weight: 3,
               opacity: 0.9,
             },
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(
-                `<b>Romeinse linie</b><br>${p.Naam ?? ""}`
-              );
-            },
+            onEachFeature: (f, l) =>
+              l.bindPopup(`<b>Romeinse linie</b><br>${f.properties.Naam}`)
           });
           romLineLayer.addLayer(layer);
-          console.log("Romeinse lijnen geladen");
-        })
-        .catch((err) => console.error("rom_def_lines fout:", err));
+        });
 
       // ================================
-      // Layer control – Optie C
+      // Layer control
       // ================================
       const baseLayers = {
         OpenStreetMap: osm,
@@ -436,59 +348,70 @@ fetch("data/toestemmingen_custom.geojson")
 
       L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
-   // ================================
-// GPS – Pulsing Marker versie
-// ================================
-let tracking = false;
+      // ================================
+      // GPS – Build 7.2 (Google-style + SmoothFollow)
+      // ================================
+      let tracking = false;
+      let firstFix = true;
 
-// Permanente pulserende GPS-marker
-let gpsMarker = L.marker([52.07, 4.35], {
-  icon: L.divIcon({
-    className: "pulse",
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  })
-}).addTo(map);
+      // GPS-marker
+      let gpsMarker = L.marker([52.07, 4.35], {
+        icon: L.divIcon({
+          className: "gps-dot",
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).addTo(map);
 
-gpsMarker.setZIndexOffset(9999);
+      gpsMarker.setZIndexOffset(9999);
 
-// Permanente accuracy-circle
-let gpsAccuracy = L.circle([52.07, 4.35], {
-  radius: 0,
-  color: "#1d4ed8",
-  fillOpacity: 0.15,
-}).addTo(map);
+      // Accuracy ring
+      let gpsAccuracy = L.circle([52.07, 4.35], {
+        radius: 0,
+        color: "#1d4ed8",
+        fillOpacity: 0.15,
+      }).addTo(map);
 
-// Updaten van locatie
-function updateGps(latlng, acc) {
-  gpsMarker.setLatLng(latlng);
-  gpsAccuracy.setLatLng(latlng);
-  gpsAccuracy.setRadius(acc);
-}
+      function updateGps(latlng, acc) {
+        gpsMarker.setLatLng(latlng);
+        gpsAccuracy.setLatLng(latlng);
+        gpsAccuracy.setRadius(acc);
+      }
 
-// GPS event handlers
-map.on("locationfound", (e) => {
-  if (!tracking) return;
-  updateGps(e.latlng, e.accuracy);
-  map.setView(e.latlng, 17);
-});
-// GPS-knop
-const gpsBtn = document.getElementById("gps-toggle");
-const gpsLabel = gpsBtn.querySelector(".gps-label");
+      map.on("locationfound", (e) => {
+        if (!tracking) return;
 
-gpsBtn.addEventListener("click", () => {
-  tracking = !tracking;
-  gpsBtn.classList.toggle("gps-on", tracking);
-  gpsBtn.classList.toggle("gps-off", !tracking);
-  gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
+        updateGps(e.latlng, e.accuracy);
 
-  if (tracking) {
-    map.locate({ watch: true, enableHighAccuracy: true });
-  } else {
-    map.stopLocate();
-    gpsAccuracy.setRadius(0); // optioneel
-  }
-});
+        if (firstFix) {
+          map.setView(e.latlng, 17);
+          firstFix = false;
+        } else {
+          map.panTo(e.latlng);
+        }
+      });
+
+      map.on("locationerror", (e) => alert("GPS fout: " + e.message));
+
+      // GPS knop
+      const gpsBtn = document.getElementById("gps-toggle");
+      const gpsLabel = gpsBtn.querySelector(".gps-label");
+
+      gpsBtn.addEventListener("click", () => {
+        tracking = !tracking;
+        firstFix = true;
+
+        gpsBtn.classList.toggle("gps-on", tracking);
+        gpsBtn.classList.toggle("gps-off", !tracking);
+        gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
+
+        if (tracking) {
+          map.locate({ watch: true, enableHighAccuracy: true });
+        } else {
+          map.stopLocate();
+          gpsAccuracy.setRadius(0);
+        }
+      });
 
     </script>
   </body>
