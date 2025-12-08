@@ -441,13 +441,12 @@ fetch("data/toestemmingen_custom.geojson")
 
         if (tracking) {
           map.locate({ watch: true, enableHighAccuracy: true });
-        } else {
-          map.stopLocate();
-          if (gpsMarker) map.removeLayer(gpsMarker);
-          if (gpsAccuracy) map.removeLayer(gpsAccuracy);
-          gpsMarker = null;
-          gpsAccuracy = null;
-        }
+       } else {
+  map.stopLocate();
+  // NIET verwijderen, marker houdt laatste locatie vast
+  tracking = false;
+}
+
       });
     </script>
   </body>
