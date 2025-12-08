@@ -472,6 +472,23 @@ map.on("locationfound", (e) => {
   updateGps(e.latlng, e.accuracy);
   map.setView(e.latlng, 17);
 });
+// GPS-knop
+const gpsBtn = document.getElementById("gps-toggle");
+const gpsLabel = gpsBtn.querySelector(".gps-label");
+
+gpsBtn.addEventListener("click", () => {
+  tracking = !tracking;
+  gpsBtn.classList.toggle("gps-on", tracking);
+  gpsBtn.classList.toggle("gps-off", !tracking);
+  gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
+
+  if (tracking) {
+    map.locate({ watch: true, enableHighAccuracy: true });
+  } else {
+    map.stopLocate();
+    gpsAccuracy.setRadius(0); // optioneel
+  }
+});
 
     </script>
   </body>
