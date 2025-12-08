@@ -38,9 +38,11 @@
         border-bottom: 1px solid #1f2937;
       }
 
-      #map { flex: 1; width: 100%; }
+      #map {
+        flex: 1;
+        width: 100%;
+      }
 
-      /* GPS knop */
       .gps-toggle {
         position: absolute;
         right: 12px;
@@ -51,6 +53,9 @@
         padding: 8px 18px;
         font-size: 15px;
         cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         color: #f9fafb;
       }
 
@@ -67,14 +72,6 @@
         margin-top: 120px;
         margin-right: 10px;
       }
-
-      /* Monumenten-stijl */
-      .monumenten-style {
-        color: #b200ff;
-        fillColor: #b200ff;
-        fillOpacity: 0.35;
-        weight: 1;
-      }
     </style>
   </head>
 
@@ -82,7 +79,7 @@
     <div id="app">
       <header class="app-header">
         <div class="app-title">Detectorkaart V2</div>
-        <div class="app-subtitle">Build 7 – Monumenten + Geomorf + AHN + GPS</div>
+        <div class="app-subtitle">Build 7.0 – AMK + Mijn monumenten + Geomorf + AHN + GPS</div>
       </header>
 
       <div id="map"></div>
@@ -94,19 +91,17 @@
 
     <!-- JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
 
     <script>
-      console.log("Detectorkaart V2 – Build 7 geladen");
+      console.log("Detectorkaart V2 – Build 7.0 geladen");
 
       document.addEventListener("DOMContentLoaded", () => {
 
-        /* ---------------------------------------
-           MAP INIT
-        ---------------------------------------- */
         const map = L.map("map").setView([52.07, 4.35], 12);
 
         /* ---------------------------------------
-           BASEMAPS
+           Basemaps
         ---------------------------------------- */
         const osm = L.tileLayer(
           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -119,14 +114,14 @@
         );
 
         /* ---------------------------------------
-           PDOK LAGEN
+           PDOK lagen
         ---------------------------------------- */
         const ahnWms = L.tileLayer.wms(
           "https://service.pdok.nl/rws/ahn/wms/v1_0?",
           {
             layers: "dtm_05m",
-            transparent: true,
             format: "image/png",
+            transparent: true,
           }
         );
 
@@ -134,74 +129,89 @@
           "https://service.pdok.nl/bzk/bro-geomorfologischekaart/wms/v2_0?",
           {
             layers: "geomorphological_area",
-            transparent: true,
             format: "image/png",
+            transparent: true,
           }
         );
 
         /* ---------------------------------------
-           MONUMENTEN (jouw eigen export!)
+           AMK Monumenten (TopoJSON – landelijk)
         ---------------------------------------- */
-        const monumentenLayer = L.layerGroup();
+        const amkLayer = L.layerGroup();
+
+        fetch("data/amk_monumenten.topojson")
+          .then(r => r.json())
+          .then(topo => {
+            const name = Object.keys(topo.objects)[0];
+            const geo = topojson.feature(topo, topo.objects[name]);
+
+            const layer = L.geoJSON(geo, {
+              style: { color: "#ff7300", weight: 1, fillOpacity: 0.25 },
+              onEachFeature: (f, l) => {
+                const p = f.properties || {};
+                const nr = p.MONUMENTNR ?? "onbekend";
+                const waarde = p.WAARDE ?? "geen info";
+
+                l.bindPopup(`<b>Monument ${nr}</b><br>${waarde}`);
+              }
+            });
+
+            amkLayer.addLayer(layer);
+            console.log("AMK Monumenten geladen:", name);
+          })
+          .catch(err => console.error("AMK monumenten fout:", err));
+
+        /* ---------------------------------------
+           MIJN MONUMENTEN (monumenten_custom.geojson)
+        ---------------------------------------- */
+        const mijnMonumentenLayer = L.layerGroup();
 
         fetch("data/monumenten_custom.geojson")
           .then(r => r.json())
           .then(geojson => {
             const layer = L.geoJSON(geojson, {
               style: {
-                color: "#b200ff",
-                fillColor: "#b200ff",
+                color: "#5a1b78",
+                fillColor: "#9b4db7",
                 fillOpacity: 0.35,
-                weight: 1
+                weight: 1.2
               },
               onEachFeature: (f, l) => {
-                const naam = f.properties.Naam ?? "Onbekend monument";
-                const oms = f.properties.Omschrijving ?? "(geen omschrijving)";
+                const p = f.properties || {};
+                const naam = p.Naam || "Onbekend monument";
+                const oms  = p.Omschrijving || "(geen omschrijving)";
 
-                l.bindPopup(`
-                  <b>${naam}</b><br>
-                  ${oms}
-                `);
-
-                /* TITEL OP DE KAART */
-                if (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon") {
-                  const center = l.getBounds().getCenter();
-                  L.marker(center, {
-                    icon: L.divIcon({
-                      className: "monument-label",
-                      html: `<div style="color:#b200ff;font-size:11px;font-weight:bold;text-shadow:1px 1px 2px black;">${naam}</div>`
-                    }),
-                    interactive: false
-                  }).addTo(monumentenLayer);
-                }
+                l.bindPopup(`<b>${naam}</b><br>${oms}`);
               }
             });
-            monumentenLayer.addLayer(layer);
-            console.log("Monumenten geladen (custom export).");
+
+            mijnMonumentenLayer.addLayer(layer);
+            console.log("Mijn monumenten (custom) geladen");
           })
-          .catch(err => console.error("Monumenten fout:", err));
+          .catch(err => console.error("Mijn monumenten fout:", err));
 
         /* ---------------------------------------
-           LAYER CONTROL
+           Layer Control
         ---------------------------------------- */
-        L.control.layers(
-          {
-            "OpenStreetMap": osm,
-            "Google Satellite Hybrid": googleHybrid
-          },
-          {
-            "AHN DTM 0.5m": ahnWms,
-            "Geomorfologie (BRO)": geomorf,
-            "Monumenten (custom)": monumentenLayer
-          },
-          { collapsed: true }
-        ).addTo(map);
+        const baseLayers = {
+          "OpenStreetMap": osm,
+          "Google Satellite Hybrid": googleHybrid,
+        };
+
+        const overlays = {
+          "AHN DTM 0.5m": ahnWms,
+          "Geomorfologie (BRO)": geomorf,
+          "Monumenten (AMK)": amkLayer,
+          "Mijn monumenten (custom)": mijnMonumentenLayer
+        };
+
+        L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
         /* ---------------------------------------
-           GPS
+           GPS Tracking
         ---------------------------------------- */
         let gpsMarker = null;
-        let gpsAcc = null;
+        let gpsAccuracy = null;
         let tracking = false;
 
         function updateGps(latlng, acc) {
@@ -211,17 +221,19 @@
               weight: 3,
               className: "gps-marker"
             }).addTo(map);
-          } else gpsMarker.setLatLng(latlng);
+          } else {
+            gpsMarker.setLatLng(latlng);
+          }
 
-          if (!gpsAcc) {
-            gpsAcc = L.circle(latlng, {
+          if (!gpsAccuracy) {
+            gpsAccuracy = L.circle(latlng, {
               radius: acc,
-              color: "#1d4ed8",
-              fillOpacity: 0.15
+              fillOpacity: 0.15,
+              color: "#1d4ed8"
             }).addTo(map);
           } else {
-            gpsAcc.setLatLng(latlng);
-            gpsAcc.setRadius(acc);
+            gpsAccuracy.setLatLng(latlng);
+            gpsAccuracy.setRadius(acc);
           }
         }
 
@@ -233,7 +245,7 @@
 
         map.on("locationerror", e => alert("GPS fout: " + e.message));
 
-        const gpsBtn = document.getElementById("gps-toggle");
+        const gpsBtn   = document.getElementById("gps-toggle");
         const gpsLabel = gpsBtn.querySelector(".gps-label");
 
         gpsBtn.addEventListener("click", () => {
@@ -243,14 +255,14 @@
           gpsBtn.classList.toggle("gps-off", !tracking);
           gpsLabel.textContent = tracking ? "GPS aan" : "GPS uit";
 
-          if (tracking)
+          if (tracking) {
             map.locate({ watch: true, enableHighAccuracy: true });
-          else {
+          } else {
             map.stopLocate();
-            if (gpsMarker) map.removeLayer(gpsMarker);
-            if (gpsAcc) map.removeLayer(gpsAcc);
-            gpsMarker = null;
-            gpsAcc = null;
+            if (gpsMarker)   map.removeLayer(gpsMarker);
+            if (gpsAccuracy) map.removeLayer(gpsAccuracy);
+            gpsMarker   = null;
+            gpsAccuracy = null;
           }
         });
 
