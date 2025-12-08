@@ -29,68 +29,91 @@
     />
 
     <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-      }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
 
-      #app {
-        height: 100vh;
-        width: 100vw;
-        display: flex;
-        flex-direction: column;
-        font-family: system-ui, sans-serif;
-      }
+  #app {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
+  }
 
-      .app-header {
-        padding: 8px 12px;
-        background: #111827;
-        color: #e5e7eb;
-        border-bottom: 1px solid #1f2937;
-      }
+  .app-header {
+    padding: 8px 12px;
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+  }
 
-      .app-title { font-size: 16px; font-weight: 600; }
-      .app-subtitle { font-size: 11px; color: #9ca3af; }
+  .app-title { font-size: 16px; font-weight: 600; }
+  .app-subtitle { font-size: 11px; color: #9ca3af; }
 
-      #map {
-        flex: 1;
-        width: 100%;
-      }
+  #map {
+    flex: 1;
+    width: 100%;
+  }
 
-      .gps-toggle {
-        position: absolute;
-        right: 12px;
-        top: 60px;
-        z-index: 1000;
-        border: none;
-        border-radius: 999px;
-        padding: 8px 18px;
-        font-size: 15px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #f9fafb;
-      }
+  /* Subtiele Google Maps GPS dot */
+  .gps-dot {
+    width: 12px;
+    height: 12px;
+    background: #1a73e8;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 4px rgba(0,0,0,0.35);
+  }
 
-      .gps-toggle.gps-off { background: #7f1d1d; }
-      .gps-toggle.gps-on { background: #14532d; }
+  /* Modern Leaflet button style */
+  .leaflet-control-zoom a,
+  #gps-toggle {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    text-align: center;
+    color: #111827;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  }
 
-      /* Subtiele Google Maps GPS dot */
-      .gps-dot {
-        width: 12px;
-        height: 12px;
-        background: #1a73e8;
-        border-radius: 50%;
-        border: 2px solid white;
-        box-shadow: 0 0 4px rgba(0,0,0,0.35);
-      }
+  .leaflet-control-zoom a:hover,
+  #gps-toggle:hover {
+    background: #f3f4f6 !important;
+  }
 
-      .leaflet-top.leaflet-right {
-        margin-top: 120px;
-        margin-right: 10px;
-      }
+  #gps-toggle .gps-icon {
+    font-size: 20px;
+    line-height: 20px;
+    color: #1a73e8;
+  }
+
+  #gps-toggle.gps-on {
+    border-color: #1a73e8;
+    box-shadow: 0 0 4px rgba(26, 115, 232, 0.6);
+  }
+
+  /* GPS-knoppositie links, onder zoom */
+  #gps-toggle {
+    position: absolute;
+    left: 10px;
+    top: 118px;
+    z-index: 1000;
+    padding: 0;
+  }
+
+  .leaflet-top.leaflet-right {
+    margin-top: 120px;
+    margin-right: 10px;
+  }
+
     </style>
   </head>
 
