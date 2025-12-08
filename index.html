@@ -260,34 +260,58 @@
         })
         .catch((err) => console.error("punten_custom fout:", err));
 
-      // ================================
-      // Toestemmingen – toestemmingen_custom.geojson
-      // ================================
-      const toestLayer = L.layerGroup();
+      // ----------------------------------
+// Toestemmingen – ✔ icoontje, zoom-aware en subtiel
+// ----------------------------------
+const toestLayer = L.layerGroup();
 
-      fetch("data/toestemmingen_custom.geojson")
-        .then((r) => r.json())
-        .then((geo) => {
-          const layer = L.geoJSON(geo, {
-            style: {
-              color: "#007a3d",
-              fillColor: "#4ade80",
-              fillOpacity: 0.25,
-              weight: 1.5,
-            },
-            onEachFeature: (f, l) => {
-              const p = f.properties || {};
-              l.bindPopup(
-                `<b>Toestemming</b><br>${p.Naam ?? ""}<br>${
-                  p.Omschrijving ?? ""
-                }`
-              );
-            },
-          });
-          toestLayer.addLayer(layer);
-          console.log("Toestemmingen geladen");
-        })
-        .catch((err) => console.error("toestemmingen_custom fout:", err));
+function makeToestemmingIcon(zoom) {
+  // schaal afhankelijk van zoomniveau
+  const size = Math.max(12, Math.min(22, zoom * 1.2));  
+  return L.divIcon({
+    className: "toestemming-icon",
+    html: `<div style="
+      font-size:${size}px;
+      line-height:1;
+      color:#0ea5e9;      /* helder blauwgroen */
+      text-shadow: 0 0 2px black;
+    ">✔</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
+
+fetch("data/toestemmingen_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) => {
+        return L.marker(latlng, {
+          icon: makeToestemmingIcon(map.getZoom())
+        });
+      },
+      onEachFeature: (f, l) => {
+        const p = f.properties || {};
+        l.bindPopup(
+          `<b>Toestemming</b><br>${p.Naam ?? ""}<br>${p.Omschrijving ?? ""}`
+        );
+      }
+    });
+
+    toestLayer.addLayer(layer);
+
+    // update icoontje bij zoom → blijft subtiel!
+    map.on("zoomend", () => {
+      layer.eachLayer(marker => {
+        if (marker.setIcon) {
+          marker.setIcon(makeToestemmingIcon(map.getZoom()));
+        }
+      });
+    });
+
+    console.log("Toestemmingen geladen met ✔ icoontjes");
+  });
+
 
       // ================================
       // Romeinse verdedigingswerken – punten (rom_def_points.geojson)
