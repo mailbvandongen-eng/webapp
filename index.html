@@ -351,7 +351,7 @@ ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   AMK Monumenten — klassieke paarse stijl + oplopende tinten
+   AMK Monumenten — officiële RCE/PDOK kleurcodering (bvd 8.2)
    ============================================================ */
 
 const amkLayer = L.layerGroup();
@@ -363,37 +363,39 @@ fetch("data/amk_monumenten.topojson")
     const nameKey = Object.keys(topo.objects)[0];
     const geo = topojson.feature(topo, topo.objects[nameKey]);
 
-    // CLASSIC AMK purple tones (zoals het eerst was)
+    // Officiële AMK → RCE kleuren
     function amkColor(v) {
-      if (!v) return "#c084fc";
+      if (!v) return "#DADADA"; // geen waarde
 
       const val = v.toLowerCase();
 
       if (val.includes("zeer hoog") && val.includes("bescherm"))
-        return "#7e22ce";     // donker paars — beschermd
+        return "#5E1670";   // donker paars – beschermd
 
       if (val.includes("zeer hoog"))
-        return "#a855f7";     // stevig paars
+        return "#7B269E";   // paars – zeer hoog
 
       if (val.includes("hoog"))
-        return "#c084fc";     // midden
+        return "#9F62C9";   // licht-medium
 
-      return "#e9d5ff";       // licht
+      return "#CDA8E5";     // licht
     }
 
     const layer = L.geoJSON(geo, {
       style: function (f) {
         const waarde = f.properties?.WAARDE || "";
+        const col = amkColor(waarde);
         return {
-          color: amkColor(waarde),
-          fillColor: amkColor(waarde),
-          fillOpacity: 0.40,   // lekker subtiel zoals jij had
-          weight: 1.2          // zelfde lijnstijl als voorheen
+          color: col,
+          fillColor: col,
+          fillOpacity: 0.45,   // officiële feel, niet flets
+          weight: 1.1
         };
       },
 
       onEachFeature: (feature, polygon) => {
         const props = feature.properties || {};
+
         const waarde = props.WAARDE ?? null;
         const monumentnr = props.MONUMENTNR ?? null;
 
