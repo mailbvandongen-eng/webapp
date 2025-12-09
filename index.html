@@ -354,23 +354,24 @@ fetch("data/monumenten_custom.geojson")
   });
 
 /* ============================================================
-   Archis-punten — zoom-based size
+   Archis-punten — zoom-based, zonder border, subtiele paarse dots
    ============================================================ */
 const puntenLayer = L.layerGroup();
 
-function makePuntIcon(zoom) {
-  // Klein bij uitzoomen, beetje groter bij inzoomen
-  const size = Math.max(6, Math.min(16, zoom * 1.2));
+function makeArchisIcon(zoom) {
+  // net als toestemmingen: klein bij uitzoom, groter bij inzoom
+  const size = Math.max(6, Math.min(18, zoom * 1.2));
 
   return L.divIcon({
-    html: `<div class="punt-icon" style="
+    html: `<div class="archis-punt" style="
       width:${size}px;
       height:${size}px;
-      background:#7c3aed;
-      border:2px solid #a78bfa;
+      background:#7c3aed;      /* paars */
+      border:none;             /* GEEN zwarte outline */
       border-radius:50%;
+      opacity:0.85;            /* subtiel */
     "></div>`,
-    className: "punt-wrapper",
+    className: "archis-punt-wrapper",
     iconSize: [size, size],
     iconAnchor: [size/2, size/2]
   });
@@ -379,21 +380,21 @@ function makePuntIcon(zoom) {
 fetch("data/punten_custom.geojson")
   .then(r => r.json())
   .then(geo => {
+
     const layer = L.geoJSON(geo, {
       pointToLayer: (f, latlng) =>
-        L.marker(latlng, { icon: makePuntIcon(map.getZoom()) })
+        L.marker(latlng, { icon: makeArchisIcon(map.getZoom()) })
     });
 
     puntenLayer.addLayer(layer);
 
-    // Dynamisch mee schalen met zoom
+    // dynamisch mee schalen met zoom
     map.on("zoomend", () => {
       layer.eachLayer(m =>
-        m.setIcon(makePuntIcon(map.getZoom()))
+        m.setIcon(makeArchisIcon(map.getZoom()))
       );
     });
   });
-
 
 /* ============================================================
    Toestemmingen
