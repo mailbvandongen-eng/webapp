@@ -351,7 +351,7 @@ ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   AMK Monumenten — gestileerd per WAARDE, geen labels
+   AMK Monumenten — klassieke paarse stijl + oplopende tinten
    ============================================================ */
 
 const amkLayer = L.layerGroup();
@@ -363,50 +363,52 @@ fetch("data/amk_monumenten.topojson")
     const nameKey = Object.keys(topo.objects)[0];
     const geo = topojson.feature(topo, topo.objects[nameKey]);
 
-    // kleurfunctie op basis van WAARDE
+    // CLASSIC AMK purple tones (zoals het eerst was)
     function amkColor(v) {
-      if (!v) return "#ddd";
+      if (!v) return "#c084fc";
 
       const val = v.toLowerCase();
 
-      if (val.includes("zeer hoog") && val.includes("bescherm")) return "#4f46e5"; // donker
-      if (val.includes("zeer hoog")) return "#818cf8"; // medium
-      if (val.includes("hoog")) return "#a5b4fc"; // licht-medium
-      return "#c7d2fe"; // licht
+      if (val.includes("zeer hoog") && val.includes("bescherm"))
+        return "#7e22ce";     // donker paars — beschermd
+
+      if (val.includes("zeer hoog"))
+        return "#a855f7";     // stevig paars
+
+      if (val.includes("hoog"))
+        return "#c084fc";     // midden
+
+      return "#e9d5ff";       // licht
     }
 
     const layer = L.geoJSON(geo, {
-      style: f => {
-        const w = f.properties?.WAARDE || "";
+      style: function (f) {
+        const waarde = f.properties?.WAARDE || "";
         return {
-          color: amkColor(w),
-          fillColor: amkColor(w),
-          fillOpacity: 0.35,
-          weight: 0.8
+          color: amkColor(waarde),
+          fillColor: amkColor(waarde),
+          fillOpacity: 0.40,   // lekker subtiel zoals jij had
+          weight: 1.2          // zelfde lijnstijl als voorheen
         };
       },
 
       onEachFeature: (feature, polygon) => {
         const props = feature.properties || {};
-
+        const waarde = props.WAARDE ?? null;
         const monumentnr = props.MONUMENTNR ?? null;
-        const waarde     = props.WAARDE ?? null;
 
-        // popup (blijft bestaan)
-        let popupText = "";
+        let txt = "";
+        if (waarde) txt += `<strong>${waarde}</strong><br>`;
+        if (monumentnr) txt += `Monumentnr: ${monumentnr}`;
 
-        if (waarde) popupText += `<strong>${waarde}</strong><br>`;
-        if (monumentnr) popupText += `Monumentnr: ${monumentnr}`;
-
-        if (popupText.trim().length > 0) {
-          polygon.bindPopup(`<div class="popup-mon">${popupText}</div>`);
+        if (txt.trim() !== "") {
+          polygon.bindPopup(`<div class="popup-mon">${txt}</div>`);
         }
       }
     });
 
     amkLayer.addLayer(layer);
   });
-
 
 
 /* ============================================================
