@@ -376,6 +376,7 @@ fetch("data/punten_custom.geojson")
    Toestemmingen
    ============================================================ */
 const toestLayer = L.layerGroup();
+
 function makeToestIcon(zoom) {
   const size = Math.max(12, Math.min(22, zoom * 1.2));
   return L.divIcon({
@@ -384,9 +385,6 @@ function makeToestIcon(zoom) {
     iconSize: [size, size],
     iconAnchor: [size/2, size/2]
   });
-}
-
-
 }
 
 fetch("data/toestemmingen_custom.geojson")
@@ -398,10 +396,11 @@ fetch("data/toestemmingen_custom.geojson")
     });
     toestLayer.addLayer(layer);
 
-    map.on("zoomend", () =>
-      layer.eachLayer(m => m.setIcon(makeToestIcon(map.getZoom())))
-    );
+    map.on("zoomend", () => {
+      layer.eachLayer(m => m.setIcon(makeToestIcon(map.getZoom())));
+    });
   });
+
 
 /* ============================================================
    Romeinse punten & lijnen
