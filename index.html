@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Detectorkaart V2 – Build 7.8.1</title>
+  <title>Detectorkaart V2 – bvd 8.0</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon -->
@@ -238,7 +238,7 @@ html, body {
   z-index: 9999;
 }
 
-  /* Subtiele labels voor Monumenten (eigen) */
+/* Subtiele labels voor Monumenten (eigen) */
 .mon-label {
   font-size: 11px;
   color: #4b0082;           /* zacht paars */
@@ -249,13 +249,23 @@ html, body {
   pointer-events: none;     /* labels nooit klikbaar */
 }
 
+/* Subtiele labels voor AMK Monumenten (bvd 8.0) */
+.amk-label {
+  font-size: 11px;
+  color: #7e22ce;           /* ander paars */
+  opacity: 0.75;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 0 2px white;
+  pointer-events: none;
+}
+
 /* Popup styling – simpel en strak */
 .popup-mon {
   font-size: 12px;
   line-height: 1.4;
   max-width: 200px;
 }
-
   
 </style>
 </head>
@@ -295,7 +305,7 @@ html, body {
     </div>
 
     <!-- Build label -->
-    <div class="build-label">Build 7.8.1</div>
+    <div class="build-label">bvd 8.0</div>
   </div>
 
   <!-- JS -->
@@ -303,7 +313,7 @@ html, body {
   <script src="https://unpkg.com/topojson-client@3"></script>
 
 <script>
-console.log("Detectorkaart V2 – Build 7.8 geladen");
+console.log("Detectorkaart V2 – bvd 8.0 geladen");
 
 
 /* ============================================================
@@ -341,12 +351,11 @@ ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   AMK Monumenten — zelfde gedrag als Monumenten (eigen)
+   AMK Monumenten — zelfde gedrag als Monumenten (eigen), maar met MONUMENTNR/WAARDE
    ============================================================ */
 
 const amkLayer = L.layerGroup();        // polygonen
 const amkLabelLayer = L.layerGroup();   // labels (losse laag)
-let amkLabels = [];                     // lijst om zoom-filter toe te passen
 
 fetch("data/amk_monumenten.topojson")
   .then(r => r.json())
@@ -367,44 +376,37 @@ fetch("data/amk_monumenten.topojson")
 
         const props = feature.properties || {};
 
-        const labelText =
-          props.name ||
-          props.Name ||
-          props.Naam ||
-          null;
+        const monumentnr = props.MONUMENTNR ?? null;
+        const waarde     = props.WAARDE ?? null;
 
-        const desc =
-          props.description ||
-          props.Description ||
-          props.Omschrijving ||
-          null;
+        // LABEL-tekst
+        const labelText = waarde || (monumentnr ? `AMK ${monumentnr}` : "AMK gebied");
+
+        // POPUP-tekst
+        let popupText = `<strong>${labelText}</strong>`;
+        if (monumentnr) popupText += `<br>Monumentnr: ${monumentnr}`;
+        if (waarde)     popupText += `<br>Waarde: ${waarde}`;
 
         /* ===== Label ===== */
-        if (labelText) {
-          const center = polygon.getBounds().getCenter();
+        const center = polygon.getBounds().getCenter();
 
-          const lbl = L.marker(center, {
-            icon: L.divIcon({
-              className: "amk-label",
-              html: labelText,
-              iconSize: null
-            }),
-            interactive: false
-          });
+        const lbl = L.marker(center, {
+          icon: L.divIcon({
+            className: "amk-label",
+            html: labelText,
+            iconSize: null
+          }),
+          interactive: false
+        });
 
-          amkLabels.push(lbl);
-          amkLabelLayer.addLayer(lbl);
-        }
+        amkLabelLayer.addLayer(lbl);
 
         /* ===== Popup ===== */
-        if (labelText || desc) {
-          polygon.bindPopup(`
-            <div class="popup-mon">
-              <strong>${labelText ?? "AMK Monument"}</strong><br>
-              ${desc ?? ""}
-            </div>
-          `);
-        }
+        polygon.bindPopup(
+          `<div class="popup-mon">
+             ${popupText}
+           </div>`
+        );
       }
     });
 
