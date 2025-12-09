@@ -441,12 +441,12 @@ const baseLayers = {
 const overlays = {
   "AHN 0.5m": ahnWms,
   "Geomorfologie": geomorf,
-  "AMK Monumenten": amkLayer,
-  "Eigen monumenten": customMonLayer,
-  "Vondsten": puntenLayer,
+  "Monumenten (AMK)": amkLayer,
+  "Monumenten (eigen)": customMonLayer,
+  "Archis-punten": puntenLayer,
   "Toestemmingen": toestLayer,
-  "Romeinse punten": romPtsLayer,
-  "Romeinse lijnen": romLineLayer
+  "Castella (punten)": romPtsLayer,
+  "Castella (lijnen)": romLineLayer
 };
 
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
