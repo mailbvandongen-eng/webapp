@@ -374,34 +374,41 @@ fetch("data/monumenten_custom.geojson")
 
       onEachFeature: function (feature, polygon) {
 
-        /* ==============================
-           LABEL – SUBTIEL, NIET SCHREEUWERIG
-           ============================== */
-        if (feature.properties && feature.properties.name) {
+        /* --------- LABEL --------- */
+        const props = feature.properties || {};
+        const labelText =
+          props.name ||
+          props.Name ||
+          props.naam ||
+          props.Naam ||
+          null;
 
-          // bepaal polygon centrum
+        if (labelText) {
           const center = polygon.getBounds().getCenter();
 
-          const label = L.marker(center, {
+          L.marker(center, {
             icon: L.divIcon({
               className: "mon-label",
-              html: feature.properties.name,
+              html: labelText,
               iconSize: null
             }),
-            interactive: false  // label niet klikbaar
-          });
-
-          label.addTo(customMonLayer);
+            interactive: false
+          }).addTo(customMonLayer);
         }
 
-        /* ==============================
-           POPUP - klik voor omschrijving
-           ============================== */
-        if (feature.properties && feature.properties.description) {
+        /* -------- POPUP -------- */
+        const desc =
+          props.description ||
+          props.Description ||
+          props.omschrijving ||
+          props.Omschrijving ||
+          null;
+
+        if (desc) {
           polygon.bindPopup(
             `<div class="popup-mon">
-               <strong>${feature.properties.name ?? "Monument"}</strong><br>
-               ${feature.properties.description}
+               <strong>${labelText ?? "Monument"}</strong><br>
+               ${desc}
              </div>`
           );
         }
