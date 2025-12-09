@@ -341,19 +341,90 @@ ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   AMK
+   AMK Monumenten — zelfde gedrag als Monumenten (eigen)
    ============================================================ */
-const amkLayer = L.layerGroup();
+
+const amkLayer = L.layerGroup();        // polygonen
+const amkLabelLayer = L.layerGroup();   // labels (losse laag)
+let amkLabels = [];                     // lijst om zoom-filter toe te passen
+
 fetch("data/amk_monumenten.topojson")
   .then(r => r.json())
   .then(topo => {
-    const name = Object.keys(topo.objects)[0];
-    const geo = topojson.feature(topo, topo.objects[name]);
+
+    const nameKey = Object.keys(topo.objects)[0];
+    const geo = topojson.feature(topo, topo.objects[nameKey]);
+
     const layer = L.geoJSON(geo, {
-      style: { color: "#a855f7", weight: 1, fillOpacity: 0.25 }
+      style: {
+        color: "#a855f7",
+        fillColor: "#c084fc",
+        fillOpacity: 0.25,
+        weight: 1.2
+      },
+
+      onEachFeature: (feature, polygon) => {
+
+        const props = feature.properties || {};
+
+        const labelText =
+          props.name ||
+          props.Name ||
+          props.Naam ||
+          null;
+
+        const desc =
+          props.description ||
+          props.Description ||
+          props.Omschrijving ||
+          null;
+
+        /* ===== Label ===== */
+        if (labelText) {
+          const center = polygon.getBounds().getCenter();
+
+          const lbl = L.marker(center, {
+            icon: L.divIcon({
+              className: "amk-label",
+              html: labelText,
+              iconSize: null
+            }),
+            interactive: false
+          });
+
+          amkLabels.push(lbl);
+          amkLabelLayer.addLayer(lbl);
+        }
+
+        /* ===== Popup ===== */
+        if (labelText || desc) {
+          polygon.bindPopup(`
+            <div class="popup-mon">
+              <strong>${labelText ?? "AMK Monument"}</strong><br>
+              ${desc ?? ""}
+            </div>
+          `);
+        }
+      }
     });
+
     amkLayer.addLayer(layer);
   });
+
+/* ============================================================
+   Label toggle op zoom (zelfde als Monumenten eigen)
+   ============================================================ */
+function updateAmkLabels() {
+  if (map.getZoom() >= 14) {
+    if (!map.hasLayer(amkLabelLayer)) map.addLayer(amkLabelLayer);
+  } else {
+    if (map.hasLayer(amkLabelLayer)) map.removeLayer(amkLabelLayer);
+  }
+}
+
+map.on("zoomend", updateAmkLabels);
+updateAmkLabels();
+
 
 /* ============================================================
    Monumenten (eigen) — labels alleen bij zoom >= 14
