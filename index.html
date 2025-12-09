@@ -167,7 +167,7 @@ html, body {
 #opacity-toggle {
   position: absolute;
   right: 10px;
-  bottom: 10px;
+  bottom: 80px; /* Zo blijft de knop zichtbaar op mobiel */
 }
 
 /* icoon: stapel lagen, bovenste transparanter */
@@ -183,7 +183,7 @@ html, body {
 #opacity-panel {
   position: absolute;
   right: 10px;
-  bottom: 56px; /* 38 knop + marge */
+  bottom: 140px; /* Was 56px — nu hoger zodat hij nooit overlapt en zichtbaar is op mobiel */
   padding: 8px 10px;
   background: #ffffff;
   border-radius: 10px;
@@ -220,6 +220,7 @@ html, body {
 .opacity-row input[type="range"] {
   width: 100%;
 }
+
 
 /* ============================================================
    BUILD LABEL – linksonder
