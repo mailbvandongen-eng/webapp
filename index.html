@@ -351,11 +351,10 @@ ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   AMK Monumenten — zelfde gedrag als Monumenten (eigen), maar met MONUMENTNR/WAARDE
+   AMK Monumenten — gestileerd per WAARDE, geen labels
    ============================================================ */
 
-const amkLayer = L.layerGroup();        // polygonen
-const amkLabelLayer = L.layerGroup();   // labels (losse laag)
+const amkLayer = L.layerGroup();
 
 fetch("data/amk_monumenten.topojson")
   .then(r => r.json())
@@ -364,54 +363,50 @@ fetch("data/amk_monumenten.topojson")
     const nameKey = Object.keys(topo.objects)[0];
     const geo = topojson.feature(topo, topo.objects[nameKey]);
 
+    // kleurfunctie op basis van WAARDE
+    function amkColor(v) {
+      if (!v) return "#ddd";
+
+      const val = v.toLowerCase();
+
+      if (val.includes("zeer hoog") && val.includes("bescherm")) return "#4f46e5"; // donker
+      if (val.includes("zeer hoog")) return "#818cf8"; // medium
+      if (val.includes("hoog")) return "#a5b4fc"; // licht-medium
+      return "#c7d2fe"; // licht
+    }
+
     const layer = L.geoJSON(geo, {
-      style: {
-        color: "#a855f7",
-        fillColor: "#c084fc",
-        fillOpacity: 0.25,
-        weight: 1.2
+      style: f => {
+        const w = f.properties?.WAARDE || "";
+        return {
+          color: amkColor(w),
+          fillColor: amkColor(w),
+          fillOpacity: 0.35,
+          weight: 0.8
+        };
       },
 
       onEachFeature: (feature, polygon) => {
-
         const props = feature.properties || {};
 
         const monumentnr = props.MONUMENTNR ?? null;
         const waarde     = props.WAARDE ?? null;
 
-        // LABEL-tekst
-        const labelText = waarde || (monumentnr ? `AMK ${monumentnr}` : "AMK gebied");
+        // popup (blijft bestaan)
+        let popupText = "";
 
-        // POPUP-tekst
-        let popupText = `<strong>${labelText}</strong>`;
-        if (monumentnr) popupText += `<br>Monumentnr: ${monumentnr}`;
-        if (waarde)     popupText += `<br>Waarde: ${waarde}`;
+        if (waarde) popupText += `<strong>${waarde}</strong><br>`;
+        if (monumentnr) popupText += `Monumentnr: ${monumentnr}`;
 
-        /* ===== Label ===== */
-        const center = polygon.getBounds().getCenter();
-
-        const lbl = L.marker(center, {
-          icon: L.divIcon({
-            className: "amk-label",
-            html: labelText,
-            iconSize: null
-          }),
-          interactive: false
-        });
-
-        amkLabelLayer.addLayer(lbl);
-
-        /* ===== Popup ===== */
-        polygon.bindPopup(
-          `<div class="popup-mon">
-             ${popupText}
-           </div>`
-        );
+        if (popupText.trim().length > 0) {
+          polygon.bindPopup(`<div class="popup-mon">${popupText}</div>`);
+        }
       }
     });
 
     amkLayer.addLayer(layer);
   });
+
 
 /* ============================================================
    Label toggle op zoom (zelfde als Monumenten eigen)
