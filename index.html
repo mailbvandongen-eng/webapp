@@ -336,22 +336,61 @@ fetch("data/amk_monumenten.topojson")
   });
 
 /* ============================================================
-   Eigen monumenten
+   Monumenten (eigen) — labels + klik-info
    ============================================================ */
 const customMonLayer = L.layerGroup();
+
 fetch("data/monumenten_custom.geojson")
   .then(r => r.json())
   .then(geo => {
+
     const layer = L.geoJSON(geo, {
       style: {
         color: "#9333ea",
         fillColor: "#c4b5fd",
         fillOpacity: 0.35,
         weight: 1.2
+      },
+
+      onEachFeature: function (feature, polygon) {
+
+        /* ==============================
+           LABEL – SUBTIEL, NIET SCHREEUWERIG
+           ============================== */
+        if (feature.properties && feature.properties.name) {
+
+          // bepaal polygon centrum
+          const center = polygon.getBounds().getCenter();
+
+          const label = L.marker(center, {
+            icon: L.divIcon({
+              className: "mon-label",
+              html: feature.properties.name,
+              iconSize: null
+            }),
+            interactive: false  // label niet klikbaar
+          });
+
+          label.addTo(customMonLayer);
+        }
+
+        /* ==============================
+           POPUP - klik voor omschrijving
+           ============================== */
+        if (feature.properties && feature.properties.description) {
+          polygon.bindPopup(
+            `<div class="popup-mon">
+               <strong>${feature.properties.name ?? "Monument"}</strong><br>
+               ${feature.properties.description}
+             </div>`
+          );
+        }
       }
     });
+
     customMonLayer.addLayer(layer);
   });
+
 
 /* ============================================================
    Archis-punten — exact zelfde gedrag als Toestemmingen
