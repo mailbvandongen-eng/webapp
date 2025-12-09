@@ -424,23 +424,21 @@ fetch("data/toestemmingen_custom.geojson")
 
 
 /* ============================================================
-   Castella (punten) – zoom-based Romeins blauw
+   Castella (punten) — subtiele zoom-based blauwe dots
    ============================================================ */
 const romPtsLayer = L.layerGroup();
 
 function makeCastellaIcon(zoom) {
-  const size = Math.max(5, Math.min(16, zoom * 1.2));
+  const size = Math.max(10, Math.min(20, zoom * 1.1));
+  const dot = "●";  // zelfde subtiele dot als Archis, maar blauw
 
   return L.divIcon({
-    html: `<div class="castella-punt" style="
-      width:${size}px;
-      height:${size}px;
-      background:#2b6cb0;          /* zacht Romeins blauw */
-      border:none;                 /* geen zwarte rand */
-      border-radius:50%;
-      opacity:0.9;
-    "></div>`,
-    className: "castella-punt-wrapper",
+    html: `<div style="
+      font-size:${size}px;
+      color:#2b6cb0;        /* Romeins blauw */
+      line-height:1;
+    ">${dot}</div>`,
+    className: "castella-icon",
     iconSize: [size, size],
     iconAnchor: [size/2, size/2]
   });
@@ -449,7 +447,6 @@ function makeCastellaIcon(zoom) {
 fetch("data/rom_def_points.geojson")
   .then(r => r.json())
   .then(geo => {
-
     const layer = L.geoJSON(geo, {
       pointToLayer: (f, latlng) =>
         L.marker(latlng, { icon: makeCastellaIcon(map.getZoom()) })
@@ -457,14 +454,13 @@ fetch("data/rom_def_points.geojson")
 
     romPtsLayer.addLayer(layer);
 
-    // Mee schalen bij zoom
+    // meeschalen bij zoom
     map.on("zoomend", () => {
       layer.eachLayer(m =>
         m.setIcon(makeCastellaIcon(map.getZoom()))
       );
     });
   });
-
 
 /* ============================================================
    Castella (lijnen) – dun, blauw, geen zwarte omlijning
