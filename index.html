@@ -356,9 +356,10 @@ fetch("data/amk_monumenten.topojson")
   });
 
 /* ============================================================
-   Monumenten (eigen) — labels + klik-info
+   Monumenten (eigen) — labels alleen bij zoom >= 14
    ============================================================ */
 const customMonLayer = L.layerGroup();
+let monLabels = []; // lijst voor labelmarkers
 
 fetch("data/monumenten_custom.geojson")
   .then(r => r.json())
@@ -374,50 +375,66 @@ fetch("data/monumenten_custom.geojson")
 
       onEachFeature: function (feature, polygon) {
 
-        /* --------- LABEL --------- */
-        const props = feature.properties || {};
-        const labelText =
-          props.name ||
-          props.Name ||
-          props.naam ||
-          props.Naam ||
+        /* ==========================
+           POPUP — altijd beschikbaar
+           ========================== */
+        const name =
+          feature.properties.name ||
+          feature.properties.Name ||
+          feature.properties.Naam ||
           null;
 
-        if (labelText) {
-          const center = polygon.getBounds().getCenter();
-
-          L.marker(center, {
-            icon: L.divIcon({
-              className: "mon-label",
-              html: labelText,
-              iconSize: null
-            }),
-            interactive: false
-          }).addTo(customMonLayer);
-        }
-
-        /* -------- POPUP -------- */
         const desc =
-          props.description ||
-          props.Description ||
-          props.omschrijving ||
-          props.Omschrijving ||
+          feature.properties.description ||
+          feature.properties.Description ||
+          feature.properties.Omschrijving ||
           null;
 
         if (desc) {
           polygon.bindPopup(
             `<div class="popup-mon">
-               <strong>${labelText ?? "Monument"}</strong><br>
+               <strong>${name ?? "Monument"}</strong><br>
                ${desc}
              </div>`
           );
+        }
+
+        /* ======================================
+           LABEL — MAAR: alleen tonen bij zoom >= 14
+           ====================================== */
+        if (name) {
+          const center = polygon.getBounds().getCenter();
+          const labelMarker = L.marker(center, {
+            icon: L.divIcon({
+              className: "mon-label",
+              html: name,
+              iconSize: null
+            }),
+            interactive: false
+          });
+
+          // opslaan voor dynamische toggle
+          monLabels.push(labelMarker);
         }
       }
     });
 
     customMonLayer.addLayer(layer);
-  });
 
+    /* ======================================
+       Dynamisch aan/uit bij zoomen
+       ====================================== */
+    function updateMonLabels() {
+      if (map.getZoom() >= 14) {
+        monLabels.forEach(lbl => lbl.addTo(customMonLayer));
+      } else {
+        monLabels.forEach(lbl => customMonLayer.removeLayer(lbl));
+      }
+    }
+
+    map.on("zoomend", updateMonLabels);
+    updateMonLabels(); // eerste run
+  });
 
 /* ============================================================
    Archis-punten — exact zelfde gedrag als Toestemmingen
