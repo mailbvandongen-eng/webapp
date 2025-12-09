@@ -426,31 +426,67 @@ fetch("data/toestemmingen_custom.geojson")
 
 
 /* ============================================================
-   Romeinse punten & lijnen
+   Castella (punten) – zoom-based Romeins blauw
    ============================================================ */
 const romPtsLayer = L.layerGroup();
+
+function makeCastellaIcon(zoom) {
+  const size = Math.max(5, Math.min(16, zoom * 1.2));
+
+  return L.divIcon({
+    html: `<div class="castella-punt" style="
+      width:${size}px;
+      height:${size}px;
+      background:#2b6cb0;          /* zacht Romeins blauw */
+      border:none;                 /* geen zwarte rand */
+      border-radius:50%;
+      opacity:0.9;
+    "></div>`,
+    className: "castella-punt-wrapper",
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
+
 fetch("data/rom_def_points.geojson")
   .then(r => r.json())
   .then(geo => {
+
     const layer = L.geoJSON(geo, {
       pointToLayer: (f, latlng) =>
-        L.circleMarker(latlng, {
-          radius: 6,
-          color: "#001f54",
-          fillColor: "#003b99",
-          fillOpacity: 0.9
-        })
+        L.marker(latlng, { icon: makeCastellaIcon(map.getZoom()) })
     });
+
     romPtsLayer.addLayer(layer);
+
+    // Mee schalen bij zoom
+    map.on("zoomend", () => {
+      layer.eachLayer(m =>
+        m.setIcon(makeCastellaIcon(map.getZoom()))
+      );
+    });
   });
 
+
+/* ============================================================
+   Castella (lijnen) – dun, blauw, geen zwarte omlijning
+   ============================================================ */
 const romLineLayer = L.layerGroup();
+
 fetch("data/rom_def_lines.geojson")
   .then(r => r.json())
   .then(geo => {
+
     const layer = L.geoJSON(geo, {
-      style: { color: "#001b44", weight: 3, opacity: 0.9 }
+      style: {
+        color: "#2b6cb0",     /* zelfde blauw als punten */
+        weight: 2,            /* dun, niet schreeuwerig */
+        opacity: 0.7,         /* subtiel */
+        lineJoin: "round",
+        lineCap: "round"
+      }
     });
+
     romLineLayer.addLayer(layer);
   });
 
