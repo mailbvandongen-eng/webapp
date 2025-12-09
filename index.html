@@ -408,20 +408,6 @@ fetch("data/amk_monumenten.topojson")
   });
 
 
-/* ============================================================
-   Label toggle op zoom (zelfde als Monumenten eigen)
-   ============================================================ */
-function updateAmkLabels() {
-  if (map.getZoom() >= 14) {
-    if (!map.hasLayer(amkLabelLayer)) map.addLayer(amkLabelLayer);
-  } else {
-    if (map.hasLayer(amkLabelLayer)) map.removeLayer(amkLabelLayer);
-  }
-}
-
-map.on("zoomend", updateAmkLabels);
-updateAmkLabels();
-
 
 /* ============================================================
    Monumenten (eigen) — labels alleen bij zoom >= 14
