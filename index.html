@@ -682,72 +682,6 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
   weight: 1
 }).addTo(map);
 
-/* ------------------------------------------------------------
-   Direction cone (polygon)
------------------------------------------------------------- */
-let directionCone = L.polygon([], {
-  color: "#1a73e8",
-  fillColor: "#1a73e8",
-  fillOpacity: 0.25,     // basislaag
-  weight: 0
-});
-
-/* ------------------------------------------------------------
-   Pixel-based cone (Google-style) – perfect breedte & lengte
------------------------------------------------------------- */
-function updateDirectionCone(latlng, headingDeg) {
-  if (!headingDeg || !latlng) {
-    directionCone.setLatLngs([]);
-    return;
-  }
-
-  // Definitieve Google-achtige afmetingen
-  const nearWidth = 26;    // smal begin bij de beacon
-  const farWidth  = 110;   // breed uiteinde (veel beter in verhouding)
-  const lengthPx  = 140;   // totale lengte van de cone
-
-  // Basispositie in pixelruimte
-  const base = map.latLngToLayerPoint(latlng);
-
-  const toRad = d => d * Math.PI / 180;
-
-  // Google-style heading offset: forward = top of the screen
-  const angle = toRad(headingDeg - 90);
-
-  // Richtingvector
-  const forward = L.point(Math.cos(angle), Math.sin(angle));
-
-  // Punt A – smal links bij beacon
-  const A = base.add(
-    L.point(-forward.y, forward.x).multiplyBy(nearWidth / 2)
-  );
-
-  // Punt B – smal rechts bij beacon
-  const B = base.add(
-    L.point(forward.y, -forward.x).multiplyBy(nearWidth / 2)
-  );
-
-  // Punt C – breed links, verder vooruit
-  const C = base.add(
-    forward.multiplyBy(lengthPx)
-           .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
-  );
-
-  // Punt D – breed rechts, verder vooruit
-  const D = base.add(
-    forward.multiplyBy(lengthPx)
-           .add(L.point(forward.y, -forward.x).multiplyBy(farWidth / 2))
-  );
-
-  // Polygon terug naar LatLng (A → C → D → B)
-  const poly = [
-    map.layerPointToLatLng(A),
-    map.layerPointToLatLng(C),
-    map.layerPointToLatLng(D),
-    map.layerPointToLatLng(B)
-  ];
-
-  directionCone.setLatLngs(poly);
 
   // Donkerder bij beacon, lichter verderop (Google vibe)
   directionCone.setStyle({
@@ -763,8 +697,7 @@ function updateGps(latlng, acc) {
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
-  updateDirectionCone(latlng, heading);
-}
+ }
 
 
 /* ------------------------------------------------------------
@@ -818,19 +751,11 @@ gpsBtn.addEventListener("click", () => {
     map.locate({ watch: true, enableHighAccuracy: true });
   } else {
     map.stopLocate();
-    directionCone.setLatLngs([]); // cone weg
+   
   }
 });
 
 
-/* ------------------------------------------------------------
-   Bij zoomen → cone opnieuw tekenen (pixel-based)
------------------------------------------------------------- */
-map.on("zoomend", () => {
-  if (gpsMarker && gpsMarker.getLatLng()) {
-    updateDirectionCone(gpsMarker.getLatLng(), heading);
-  }
-});
 
 /* ============================================================
    OPACITY SLIDERS
