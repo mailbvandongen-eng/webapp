@@ -654,12 +654,13 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING — éénmalige jump + normale follow
+   GPS TRACKING — éénmalige jump + moderne beacon + direction cone
    ============================================================ */
 
 let tracking = false;
 let firstJumpDone = false;   // bepaalt of we al één keer zijn gesprongen
 
+// === Beacon zelf (met wit randje)
 let gpsMarker = L.circleMarker([52.07, 4.35], {
   radius: 8,
   color: "#ffffff",       // WIT RANDJE
@@ -668,7 +669,7 @@ let gpsMarker = L.circleMarker([52.07, 4.35], {
   fillOpacity: 1
 }).addTo(map);
 
-
+// === Accuracy ring
 let gpsAccuracy = L.circle([52.07, 4.35], {
   radius: 0,
   color: "#1a73e8",
@@ -676,15 +677,75 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
   weight: 1
 }).addTo(map);
 
+// === Richtings-cone (wordt dynamisch gevuld)
+let heading = null;
+let directionCone = L.polygon([], {
+  color: "#1a73e8",
+  fillColor: "#1a73e8",
+  fillOpacity: 0.15,
+  weight: 0
+}).addTo(map);
 
+// === Cone update functie
+function updateDirectionCone(latlng, headingDeg) {
+  if (!headingDeg) {
+    directionCone.setLatLngs([]);
+    return;
+  }
+
+  const distance = 40;   // lengte van de cone in meters
+  const angle = 30;      // ±30° → totale cone = 60°
+
+  const rad = d => d * Math.PI / 180;
+
+  function project(lat, lon, brng, dist) {
+    const R = 6378137;
+    const d = dist / R;
+    const lat1 = rad(lat);
+    const lon1 = rad(lon);
+
+    const lat2 = Math.asin(
+      Math.sin(lat1) * Math.cos(d) +
+      Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
+    );
+
+    const lon2 = lon1 + Math.atan2(
+      Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+      Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+    );
+
+    return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+  }
+
+  const center = latlng;
+  const left  = project(center.lat, center.lng, rad(headingDeg - angle), distance);
+  const right = project(center.lat, center.lng, rad(headingDeg + angle), distance);
+  const tip   = project(center.lat, center.lng, rad(headingDeg), distance);
+
+  directionCone.setLatLngs([center, left, tip, right]);
+}
+
+// === GPS update functie
 function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
+
+  updateDirectionCone(latlng, heading);
 }
 
+// === Device heading events (Android/iOS)
+if (window.DeviceOrientationEvent) {
+  window.addEventListener("deviceorientationabsolute", ev => {
+    if (ev.alpha != null) heading = 360 - ev.alpha;
+  });
 
-// Zodra GPS een locatie vindt
+  window.addEventListener("deviceorientation", ev => {
+    if (ev.webkitCompassHeading) heading = ev.webkitCompassHeading;
+  });
+}
+
+// === Zodra GPS een locatie vindt
 map.on("locationfound", (e) => {
   if (!tracking) return;
 
@@ -701,21 +762,20 @@ map.on("locationerror", (e) => {
   alert("GPS fout: " + e.message);
 });
 
-
-// Klik-knop GPS toggle
+// === Klik-knop GPS toggle
 const gpsBtn = document.getElementById("gps-toggle");
 
 gpsBtn.addEventListener("click", () => {
-
   tracking = !tracking;
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
-    firstJumpDone = false;  // volgende klik → nieuwe sprong
+    firstJumpDone = false;  // reset voor nieuwe sprong
     map.locate({ watch: true, enableHighAccuracy: true });
 
   } else {
     map.stopLocate();
+    directionCone.setLatLngs([]); // cone weghalen bij uitzetten
   }
 });
 
