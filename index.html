@@ -702,43 +702,53 @@ function updateDirectionCone(latlng, headingDeg) {
     return;
   }
 
-  // VASTE GROOTTE IN PIXELS (zoals Google)
-  const coneLengthPx = 80;  // hoogte
-  const coneWidthPx  = 60;  // breedte
+  // Pixel afmetingen (Google style)
+  const nearWidth = 20;     // breedte bij beacon (smal)
+  const farWidth  = 90;     // breedte op afstand (breed)
+  const lengthPx  = 120;    // totale lengte van de cone
 
-  // Pixelpunt van beacon
-  const p = map.latLngToLayerPoint(latlng);
+  // huidige positie in pixels
+  const base = map.latLngToLayerPoint(latlng);
 
-  // Heading → rad, 0° = omhoog
-  const angle = (headingDeg - 90) * Math.PI / 180;
+  const toRad = d => d * Math.PI / 180;
+  const angle = toRad(headingDeg - 90);
 
-  // Tip (midden voor)
-  const tip = L.point(
-    p.x + Math.cos(angle) * coneLengthPx,
-    p.y + Math.sin(angle) * coneLengthPx
+  // vectoren
+  const forward = L.point(Math.cos(angle), Math.sin(angle));
+
+  // Punt A → smal begin links
+  const A = base.add(
+    L.point(-forward.y, forward.x).multiplyBy(nearWidth / 2)
   );
 
-  // Left/right edges
-  const left = L.point(
-    p.x + Math.cos(angle - Math.PI/4) * coneWidthPx,
-    p.y + Math.sin(angle - Math.PI/4) * coneWidthPx
+  // Punt B → smal begin rechts
+  const B = base.add(
+    L.point(forward.y, -forward.x).multiplyBy(nearWidth / 2)
   );
 
-  const right = L.point(
-    p.x + Math.cos(angle + Math.PI/4) * coneWidthPx,
-    p.y + Math.sin(angle + Math.PI/4) * coneWidthPx
+  // Punt C → ver links (breed)
+  const C = base.add(
+    forward.multiplyBy(lengthPx)
+          .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
+  );
+
+  // Punt D → ver rechts (breed)
+  const D = base.add(
+    forward.multiplyBy(lengthPx)
+          .add(L.point(forward.y, -forward.x).multiplyBy(farWidth / 2))
   );
 
   // Terug naar LatLng
   const poly = [
-    latlng,
-    map.layerPointToLatLng(left),
-    map.layerPointToLatLng(tip),
-    map.layerPointToLatLng(right)
+    map.layerPointToLatLng(A),
+    map.layerPointToLatLng(C),
+    map.layerPointToLatLng(D),
+    map.layerPointToLatLng(B)
   ];
 
   directionCone.setLatLngs(poly);
 }
+
 
 
 /* ------------------------------------------------------------
