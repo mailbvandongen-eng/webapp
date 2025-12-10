@@ -308,13 +308,14 @@ if (window.DeviceOrientationEvent) {
     if (ev.webkitCompassHeading) updateSmoothHeading(ev.webkitCompassHeading);
   });
 }
-
 /* ============================================================
    GPS BUTTON
 ============================================================ */
-document.getElementById("gps-toggle").addEventListener("click",()=>{
+const gpsBtn = document.getElementById("gps-toggle");
+
+gpsBtn.addEventListener("click", () => {
   tracking = !tracking;
-  gps-toggle.classList.toggle("gps-on", tracking);
+  gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
     firstJumpDone = false;
@@ -324,6 +325,7 @@ document.getElementById("gps-toggle").addEventListener("click",()=>{
     directionCone.setLatLngs([]);
   }
 });
+
 
 /* ============================================================
    ROTATION MODE
