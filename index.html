@@ -364,22 +364,24 @@ fetch("data/amk_monumenten.topojson")
     const geo = topojson.feature(topo, topo.objects[nameKey]);
 
     // Officiële AMK → RCE kleuren
-    function amkColor(v) {
-      if (!v) return "#DADADA"; // geen waarde
+  function amkColor(value) {
+  if (!value) return "#e5e7eb"; // fallback lichtgrijs
 
-      const val = v.toLowerCase();
+  const v = value.toLowerCase();
 
-      if (val.includes("zeer hoog") && val.includes("bescherm"))
-        return "#5E1670";   // donker paars – beschermd
+  // 1. Zeer hoge waarde, beschermd
+  if (v.includes("bescherm")) return "#5b21b6";  // donker paars
 
-      if (val.includes("zeer hoog"))
-        return "#7B269E";   // paars – zeer hoog
+  // 2. Zeer hoge waarde (maakt niet uit waar het staat in de zin)
+  if (v.includes("zeer") && v.includes("hoog")) return "#7c3aed"; // medium paars
 
-      if (val.includes("hoog"))
-        return "#9F62C9";   // licht-medium
+  // 3. Hoge waarde (maar niet 'zeer')
+  if (v.includes("hoog")) return "#a78bfa"; // licht-medium paars
 
-      return "#CDA8E5";     // licht
-    }
+  // 4. Alles overig
+  return "#ddd6fe"; // heel licht paars
+}
+
 
     const layer = L.geoJSON(geo, {
       style: function (f) {
