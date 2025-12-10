@@ -654,12 +654,14 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING
+   GPS TRACKING — éénmalige jump + normale follow
    ============================================================ */
+
 let tracking = false;
+let firstJumpDone = false;   // bepaalt of we al één keer zijn gesprongen
 
 let gpsMarker = L.circleMarker([52.07, 4.35], {
-  radius: 6,
+  radius: 7,
   color: "#1a73e8",
   fillColor: "#1a73e8",
   fillOpacity: 1,
@@ -669,8 +671,10 @@ let gpsMarker = L.circleMarker([52.07, 4.35], {
 let gpsAccuracy = L.circle([52.07, 4.35], {
   radius: 0,
   color: "#1a73e8",
-  fillOpacity: 0.15
+  fillOpacity: 0.15,
+  weight: 1
 }).addTo(map);
+
 
 function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
@@ -678,26 +682,42 @@ function updateGps(latlng, acc) {
   gpsAccuracy.setRadius(acc);
 }
 
+
+// Zodra GPS een locatie vindt
 map.on("locationfound", (e) => {
   if (!tracking) return;
+
   updateGps(e.latlng, e.accuracy);
+
+  // Slechts één keer naar de locatie springen
+  if (!firstJumpDone) {
+    map.setView(e.latlng, map.getZoom(), { animate: true });
+    firstJumpDone = true;
+  }
 });
 
 map.on("locationerror", (e) => {
   alert("GPS fout: " + e.message);
 });
 
+
+// Klik-knop GPS toggle
 const gpsBtn = document.getElementById("gps-toggle");
+
 gpsBtn.addEventListener("click", () => {
+
   tracking = !tracking;
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
+    firstJumpDone = false;  // volgende klik → nieuwe sprong
     map.locate({ watch: true, enableHighAccuracy: true });
+
   } else {
     map.stopLocate();
   }
 });
+
 
 /* ============================================================
    OPACITY SLIDERS
