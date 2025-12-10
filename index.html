@@ -266,6 +266,25 @@ html, body {
   line-height: 1.4;
   max-width: 200px;
 }
+/* Halo glow om GPS marker */
+.gps-halo {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.25);
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.6);
+}
+
+/* Richtingsbundel */
+.gps-beam {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 40px solid rgba(37, 99, 235, 0.45);
+  transform-origin: bottom center;
+}
+
   
 </style>
 </head>
@@ -654,13 +673,27 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING – Eénmalige jump bij elke keer aanzetten
+   GPS TRACKING – jump + halo + heading beam
    ============================================================ */
 
 let tracking = false;
 let shouldJump = false;
 
-let gpsMarker = L.circleMarker([52.07, 4.35], {
+let gpsLatLng = L.latLng(52.07, 4.35);
+
+// Halo (glow) marker
+let gpsHalo = L.marker(gpsLatLng, {
+  icon: L.divIcon({
+    className: "",
+    html: '<div class="gps-halo"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  }),
+  interactive: false
+}).addTo(map);
+
+// Punt in het midden
+let gpsMarker = L.circleMarker(gpsLatLng, {
   radius: 6,
   color: "#1a73e8",
   fillColor: "#1a73e8",
@@ -668,24 +701,54 @@ let gpsMarker = L.circleMarker([52.07, 4.35], {
   weight: 2
 }).addTo(map);
 
-let gpsAccuracy = L.circle([52.07, 4.35], {
+// Richtingsbundel
+let gpsBeam = L.marker(gpsLatLng, {
+  icon: L.divIcon({
+    className: "",
+    html: '<div class="gps-beam"></div>',
+    iconSize: [40, 40],
+    iconAnchor: [20, 40]
+  }),
+  interactive: false
+}).addTo(map);
+
+// GPS nauwkeurigheid cirkel
+let gpsAccuracy = L.circle(gpsLatLng, {
   radius: 0,
   color: "#1a73e8",
   fillOpacity: 0.15
 }).addTo(map);
 
 function updateGps(latlng, acc) {
+  gpsLatLng = latlng;
+
   gpsMarker.setLatLng(latlng);
+  gpsHalo.setLatLng(latlng);
+  gpsBeam.setLatLng(latlng);
+
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
-  // eenmalige sprong bij starten
+  // éénmalige sprong
   if (shouldJump) {
     map.setView(latlng, Math.max(map.getZoom(), 17), { animate: true });
     shouldJump = false;
   }
 }
 
+/* ===== HEADING OPHALEN =====
+   supported op Android / iPhone
+*/
+window.addEventListener("deviceorientation", (ev) => {
+  if (!tracking) return;
+
+  let heading = ev.webkitCompassHeading ?? ev.alpha;
+  if (heading == null) return;
+
+  gpsBeam._icon.style.transform = `rotate(${heading}deg)`;
+});
+
+/* ===== Leaflet location ===== */
 map.on("locationfound", (e) => {
   if (!tracking) return;
   updateGps(e.latlng, e.accuracy);
@@ -702,12 +765,13 @@ gpsBtn.addEventListener("click", () => {
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
-    shouldJump = true; // bij elke 'aan' → één sprong
+    shouldJump = true;
     map.locate({ watch: true, enableHighAccuracy: true });
   } else {
     map.stopLocate();
   }
 });
+
 
 /* ============================================================
    OPACITY SLIDERS
