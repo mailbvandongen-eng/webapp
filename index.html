@@ -654,22 +654,23 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING — jump, beacon + 90° richting-cone
+   GPS TRACKING — jump, beacon + 90° cone
    ============================================================ */
 
 let tracking = false;
 let firstJumpDone = false;
+let heading = null;
 
-// === Beacon (iets groter, Google-style)
+// Beacon (Google-style)
 let gpsMarker = L.circleMarker([52.07, 4.35], {
-  radius: 10,             // GROTERE BEACON
-  color: "#ffffff",       // Witte rand
+  radius: 10,
+  color: "#ffffff",
   weight: 2,
-  fillColor: "#1a73e8",   // Google-blauw
+  fillColor: "#1a73e8",
   fillOpacity: 1
 }).addTo(map);
 
-// === Accuracy circle
+// Accuracy circle
 let gpsAccuracy = L.circle([52.07, 4.35], {
   radius: 0,
   color: "#1a73e8",
@@ -677,8 +678,7 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
   weight: 1
 }).addTo(map);
 
-// === Richtingscone (nu 90 graden)
-let heading = null;
+// Richtings-cone
 let directionCone = L.polygon([], {
   color: "#1a73e8",
   fillColor: "#1a73e8",
@@ -687,16 +687,14 @@ let directionCone = L.polygon([], {
 }).addTo(map);
 
 
-// === Berekening van de cone
+// Functie: cone berekenen
 function updateDirectionCone(latlng, headingDeg) {
   if (!headingDeg) {
     directionCone.setLatLngs([]);
     return;
   }
 
-  const distance = 50;  // iets langer, Google doet ~40–60m
-  const halfAngle = 45; // cone = 90° totaal
-
+  const distance = 50;
   const rad = d => d * Math.PI / 180;
 
   function project(lat, lon, brng, dist) {
@@ -706,49 +704,36 @@ function updateDirectionCone(latlng, headingDeg) {
     const lon1 = rad(lon);
 
     const lat2 = Math.asin(
-      Math.sin(lat1)*Math.cos(d) +
-      Math.cos(lat1)*Math.sin(d)*Math.cos(brng)
+      Math.sin(lat1) * Math.cos(d) +
+      Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
     );
 
     const lon2 = lon1 + Math.atan2(
-      Math.sin(brng)*Math.sin(d)*Math.cos(lat1),
-      Math.cos(d) - Math.sin(lat1)*Math.sin(lat2)
+      Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+      Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
     );
 
     return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
   }
 
-  const left  = project(latlng.lat, latlng.lng, rad(headingDeg - halfAngle), distance);
-  const right = project(latlng.lat, latlng.lng, rad(headingDeg + halfAngle), distance);
+  const left  = project(latlng.lat, latlng.lng, rad(headingDeg - 45), distance);
+  const right = project(latlng.lat, latlng.lng, rad(headingDeg + 45), distance);
   const tip   = project(latlng.lat, latlng.lng, rad(headingDeg), distance);
 
   directionCone.setLatLngs([latlng, left, tip, right]);
 }
 
 
-// === GPS update
+// GPS-update
 function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
-
   updateDirectionCone(latlng, heading);
 }
 
 
-// === Device heading ophalen
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientationabsolute", ev => {
-    if (ev.alpha != null) heading = 360 - ev.alpha;
-  });
-
-  window.addEventListener("deviceorientation", ev => {
-    if (ev.webkitCompassHeading) heading = ev.webkitCompassHeading;
-  });
-}
-
-
-// === Bij locatie gevonden
+// Event: GPS gevonden
 map.on("locationfound", (e) => {
   if (!tracking) return;
 
@@ -760,10 +745,39 @@ map.on("locationfound", (e) => {
   }
 });
 
+// Event: GPS fout
 map.on("locationerror", (e) => {
   alert("GPS fout: " + e.message);
 });
 
+
+// Device heading
+if (window.DeviceOrientationEvent) {
+  window.addEventListener("deviceorientationabsolute", ev => {
+    if (ev.alpha != null) heading = 360 - ev.alpha;
+  });
+
+  window.addEventListener("deviceorientation", ev => {
+    if (ev.webkitCompassHeading) heading = ev.webkitCompassHeading;
+  });
+}
+
+
+// GPS knop
+const gpsBtn = document.getElementById("gps-toggle");
+
+gpsBtn.addEventListener("click", () => {
+  tracking = !tracking;
+  gpsBtn.classList.toggle("gps-on", tracking);
+
+  if (tracking) {
+    firstJumpDone = false;
+    map.locate({ watch: true, enableHighAccuracy: true });
+  } else {
+    map.stopLocate();
+    directionCone.setLatLngs([]);
+  }
+});
 
 /* ============================================================
    OPACITY SLIDERS
