@@ -673,7 +673,7 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING – jump + halo + heading beam
+   GPS TRACKING – beacon + halo + richting zonder kerstboom
    ============================================================ */
 
 let tracking = false;
@@ -681,83 +681,97 @@ let shouldJump = false;
 
 let gpsLatLng = L.latLng(52.07, 4.35);
 
-// Halo (glow) marker
-let gpsHalo = L.marker(gpsLatLng, {
-  icon: L.divIcon({
-    className: "",
-    html: '<div class="gps-halo"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  }),
-  interactive: false
-}).addTo(map);
+// HALO (achtergrond glow)
+let gpsHalo = L.divIcon({
+  className: "",
+  html: `<div style="
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    background: rgba(37,99,235,0.18);
+    box-shadow: 0 0 12px rgba(37,99,235,0.55);
+    transform: translate(-50%, -50%);
+  "></div>`,
+  iconSize: [40, 40],
+  iconAnchor: [20, 20]
+});
 
-// Punt in het midden
+// Richtingsbeam — *eindelijk goed uit je positie*
+let gpsBeamIcon = L.divIcon({
+  className: "",
+  html: `<div style="
+    width:0;
+    height:0;
+    border-left:12px solid transparent;
+    border-right:12px solid transparent;
+    border-top:50px solid rgba(37,99,235,0.35);
+    transform-origin: 50% 100%;
+    transform: translate(-50%, -100%);
+  "></div>`,
+  iconSize: [24, 50],
+  iconAnchor: [12, 45]    // onderkant = exact op GPS
+});
+
+// MARKERS
+let beamMarker = L.marker(gpsLatLng, { icon: gpsBeamIcon, interactive:false }).addTo(map);
+let haloMarker = L.marker(gpsLatLng, { icon: gpsHalo, interactive:false }).addTo(map);
+
 let gpsMarker = L.circleMarker(gpsLatLng, {
-  radius: 6,
+  radius: 7,
   color: "#1a73e8",
   fillColor: "#1a73e8",
   fillOpacity: 1,
   weight: 2
 }).addTo(map);
 
-// Richtingsbundel
-let gpsBeam = L.marker(gpsLatLng, {
-  icon: L.divIcon({
-    className: "",
-    html: '<div class="gps-beam"></div>',
-    iconSize: [40, 40],
-    iconAnchor: [20, 40]
-  }),
-  interactive: false
-}).addTo(map);
-
-// GPS nauwkeurigheid cirkel
 let gpsAccuracy = L.circle(gpsLatLng, {
-  radius: 0,
-  color: "#1a73e8",
-  fillOpacity: 0.15
+  radius:0,
+  color:"#1a73e8",
+  fillOpacity:0.15
 }).addTo(map);
 
+
+// UPDATE FUNCTIE
 function updateGps(latlng, acc) {
   gpsLatLng = latlng;
 
   gpsMarker.setLatLng(latlng);
-  gpsHalo.setLatLng(latlng);
-  gpsBeam.setLatLng(latlng);
+  haloMarker.setLatLng(latlng);
+  beamMarker.setLatLng(latlng);
 
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
-  // éénmalige sprong
   if (shouldJump) {
-    map.setView(latlng, Math.max(map.getZoom(), 17), { animate: true });
+    map.setView(latlng, Math.max(map.getZoom(), 17), { animate:true });
     shouldJump = false;
   }
 }
 
-/* ===== HEADING OPHALEN =====
-   supported op Android / iPhone
-*/
+
+// HEADING OPHALEN
 window.addEventListener("deviceorientation", (ev) => {
   if (!tracking) return;
-
   let heading = ev.webkitCompassHeading ?? ev.alpha;
   if (heading == null) return;
 
-  gpsBeam._icon.style.transform = `rotate(${heading}deg)`;
+  // beam draait NU echt goed en rond eigen GPS
+  if (beamMarker._icon) {
+    beamMarker._icon.style.transform = `rotate(${heading}deg)`;
+  }
 });
 
-/* ===== Leaflet location ===== */
+
+// Leaflet GPS
 map.on("locationfound", (e) => {
   if (!tracking) return;
   updateGps(e.latlng, e.accuracy);
 });
 
-map.on("locationerror", (e) => {
-  alert("GPS fout: " + e.message);
-});
+map.on("locationerror", (e) => alert("GPS fout: " + e.message));
 
+
+// KNOP
 const gpsBtn = document.getElementById("gps-toggle");
 
 gpsBtn.addEventListener("click", () => {
@@ -766,7 +780,7 @@ gpsBtn.addEventListener("click", () => {
 
   if (tracking) {
     shouldJump = true;
-    map.locate({ watch: true, enableHighAccuracy: true });
+    map.locate({ watch:true, enableHighAccuracy:true });
   } else {
     map.stopLocate();
   }
