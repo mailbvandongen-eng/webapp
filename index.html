@@ -654,7 +654,7 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING — jump, beacon + pixel-based direction cone
+   GPS TRACKING — jump, beacon + Google-style direction cone
    ============================================================ */
 
 let tracking = false;
@@ -683,11 +683,61 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
 }).addTo(map);
 
 
-  // Donkerder bij beacon, lichter verderop (Google vibe)
-  directionCone.setStyle({
-    fillOpacity: 0.22
-  });
+/* ------------------------------------------------------------
+   Direction cone (sectorvorm, pixel-based)
+------------------------------------------------------------ */
+let directionCone = L.polygon([], {
+  color: "#1a73e8",
+  fillColor: "#1a73e8",
+  fillOpacity: 0.25,
+  weight: 0
+}).addTo(map);
+
+
+/* ------------------------------------------------------------
+   Pixel-based cone (blijft exact even groot, ongeacht zoom)
+------------------------------------------------------------ */
+function updateDirectionCone(latlng, headingDeg) {
+  if (!headingDeg || !latlng) {
+    directionCone.setLatLngs([]);
+    return;
+  }
+
+  // Definitieve Google-achtige afmetingen
+  const nearWidth = 26;    // smal bij beacon
+  const farWidth  = 110;   // breed uiteinde
+  const lengthPx  = 140;   // lengte van cone
+
+  const base = map.latLngToLayerPoint(latlng);
+  const toRad = d => d * Math.PI / 180;
+
+  // Google uses heading = 0 pointing North, Leaflet uses -90 offset
+  const angle = toRad(headingDeg - 90);
+  const forward = L.point(Math.cos(angle), Math.sin(angle));
+
+  // Smalle basis links/rechts
+  const A = base.add(L.point(-forward.y, forward.x).multiplyBy(nearWidth / 2));
+  const B = base.add(L.point( forward.y,-forward.x).multiplyBy(nearWidth / 2));
+
+  // Voorpunt links/rechts
+  const C = base.add(
+    forward.multiplyBy(lengthPx)
+           .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
+  );
+  const D = base.add(
+    forward.multiplyBy(lengthPx)
+           .add(L.point( forward.y,-forward.x).multiplyBy(farWidth / 2))
+  );
+
+  // Terug naar LatLng
+  directionCone.setLatLngs([
+    map.layerPointToLatLng(A),
+    map.layerPointToLatLng(C),
+    map.layerPointToLatLng(D),
+    map.layerPointToLatLng(B)
+  ]);
 }
+
 
 /* ------------------------------------------------------------
    GPS update
@@ -697,7 +747,8 @@ function updateGps(latlng, acc) {
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
- }
+  updateDirectionCone(latlng, heading);
+}
 
 
 /* ------------------------------------------------------------
@@ -705,12 +756,12 @@ function updateGps(latlng, acc) {
 ------------------------------------------------------------ */
 if (window.DeviceOrientationEvent) {
 
-  // Android
+  // Android → deviceorientationabsolute
   window.addEventListener("deviceorientationabsolute", ev => {
     if (ev.alpha != null) heading = 360 - ev.alpha;
   });
 
-  // iOS Safari
+  // iOS → webkitCompassHeading
   window.addEventListener("deviceorientation", ev => {
     if (ev.webkitCompassHeading) heading = ev.webkitCompassHeading;
   });
@@ -725,7 +776,7 @@ map.on("locationfound", (e) => {
 
   updateGps(e.latlng, e.accuracy);
 
-  // Eénmalige 'jump to location'
+  // Slechts éénmalig centreren
   if (!firstJumpDone) {
     map.setView(e.latlng, Math.max(map.getZoom(), 16), { animate: true });
     firstJumpDone = true;
@@ -738,23 +789,35 @@ map.on("locationerror", (e) => {
 
 
 /* ------------------------------------------------------------
-   GPS knop toggle
+   GPS knop: aan/uit + éénmalige jump
 ------------------------------------------------------------ */
 const gpsBtn = document.getElementById("gps-toggle");
 
 gpsBtn.addEventListener("click", () => {
+
   tracking = !tracking;
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
     firstJumpDone = false;
+    directionCone.setLatLngs([]); // even geen cone tot eerste fix
     map.locate({ watch: true, enableHighAccuracy: true });
+
   } else {
     map.stopLocate();
-   
+    directionCone.setLatLngs([]); // cone weg
   }
 });
 
+
+/* ------------------------------------------------------------
+   Re-render cone bij zoom (blijft pixel-based consistent)
+------------------------------------------------------------ */
+map.on("zoomend", () => {
+  if (gpsMarker && gpsMarker.getLatLng()) {
+    updateDirectionCone(gpsMarker.getLatLng(), heading);
+  }
+});
 
 
 /* ============================================================
