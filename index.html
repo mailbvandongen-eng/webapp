@@ -756,6 +756,13 @@ map.on("locationfound", (e) => {
 
   if (!firstJumpDone) {
     map.setView(e.latlng, map.getZoom(), { animate: true });
+    firstJumpDone = true;
+  }
+});
+
+map.on("locationerror", (e) => {
+  alert("GPS fout: " + e.message);
+});
 
 
 /* ============================================================
