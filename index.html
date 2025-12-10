@@ -688,13 +688,12 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
 let directionCone = L.polygon([], {
   color: "#1a73e8",
   fillColor: "#1a73e8",
-  fillOpacity: 0.15,
+  fillOpacity: 0.25,     // basislaag
   weight: 0
-}).addTo(map);
-
+});
 
 /* ------------------------------------------------------------
-   Pixel-based cone (blijft altijd exact zelfde grootte)
+   Pixel-based cone (Google-style) – perfect breedte & lengte
 ------------------------------------------------------------ */
 function updateDirectionCone(latlng, headingDeg) {
   if (!headingDeg || !latlng) {
@@ -702,43 +701,45 @@ function updateDirectionCone(latlng, headingDeg) {
     return;
   }
 
-  // Pixel afmetingen (Google style)
-  const nearWidth = 20;     // breedte bij beacon (smal)
-  const farWidth  = 90;     // breedte op afstand (breed)
-  const lengthPx  = 120;    // totale lengte van de cone
+  // Definitieve Google-achtige afmetingen
+  const nearWidth = 26;    // smal begin bij de beacon
+  const farWidth  = 110;   // breed uiteinde (veel beter in verhouding)
+  const lengthPx  = 140;   // totale lengte van de cone
 
-  // huidige positie in pixels
+  // Basispositie in pixelruimte
   const base = map.latLngToLayerPoint(latlng);
 
   const toRad = d => d * Math.PI / 180;
+
+  // Google-style heading offset: forward = top of the screen
   const angle = toRad(headingDeg - 90);
 
-  // vectoren
+  // Richtingvector
   const forward = L.point(Math.cos(angle), Math.sin(angle));
 
-  // Punt A → smal begin links
+  // Punt A – smal links bij beacon
   const A = base.add(
     L.point(-forward.y, forward.x).multiplyBy(nearWidth / 2)
   );
 
-  // Punt B → smal begin rechts
+  // Punt B – smal rechts bij beacon
   const B = base.add(
     L.point(forward.y, -forward.x).multiplyBy(nearWidth / 2)
   );
 
-  // Punt C → ver links (breed)
+  // Punt C – breed links, verder vooruit
   const C = base.add(
     forward.multiplyBy(lengthPx)
-          .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
+           .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
   );
 
-  // Punt D → ver rechts (breed)
+  // Punt D – breed rechts, verder vooruit
   const D = base.add(
     forward.multiplyBy(lengthPx)
-          .add(L.point(forward.y, -forward.x).multiplyBy(farWidth / 2))
+           .add(L.point(forward.y, -forward.x).multiplyBy(farWidth / 2))
   );
 
-  // Terug naar LatLng
+  // Polygon terug naar LatLng (A → C → D → B)
   const poly = [
     map.layerPointToLatLng(A),
     map.layerPointToLatLng(C),
@@ -747,9 +748,12 @@ function updateDirectionCone(latlng, headingDeg) {
   ];
 
   directionCone.setLatLngs(poly);
+
+  // Donkerder bij beacon, lichter verderop (Google vibe)
+  directionCone.setStyle({
+    fillOpacity: 0.22
+  });
 }
-
-
 
 /* ------------------------------------------------------------
    GPS update
