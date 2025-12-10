@@ -897,7 +897,21 @@ if (opacityToggle && opacityPanel) {
     opacityPanel.classList.add("hidden");
     opacityToggle.classList.remove("opacity-on");
   });
+ 
 }
+  /* ============================================================
+   ROTATE TOGGLE BUTTON – LOGICA HIER
+============================================================ */
+rotateToggle.addEventListener("click", () => {
+  rotateMode = !rotateMode;
+  rotateToggle.classList.toggle("rotate-on", rotateMode);
+
+  if (rotateMode) {
+    map.getPane("mapPane").style.transform = "rotate(0deg)";
+  } else {
+    map.getPane("mapPane").style.transform = "";
+  }
+});
 </script>
 </body>
 </html>
