@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>Detectorkaart V2 – bvd 8.6</title>
+  <title>Detectorkaart V2 – bvd 8.5</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Favicon -->
@@ -22,8 +22,8 @@
 
 <style>
 /* ============================================================
-   HARD LIGHT MODE
-============================================================ */
+   HARD LIGHT MODE – dark mode zoveel mogelijk killen
+   ============================================================ */
 * {
   color-scheme: light !important;
   forced-color-adjust: none !important;
@@ -49,7 +49,7 @@ html, body {
   width: 100%;
 }
 
-/* Extra safeguard */
+/* Extra safeguard voor devices met agressieve force-dark */
 @media (prefers-color-scheme: dark) {
   html, body, #app, #map, .leaflet-container {
     background-color: #ffffff !important;
@@ -58,8 +58,8 @@ html, body {
 }
 
 /* ============================================================
-   CONTROLS
-============================================================ */
+   GENERIC CONTROL BUTTON – GPS / opacity
+   ============================================================ */
 .control-button {
   width: 38px;
   height: 38px;
@@ -74,8 +74,12 @@ html, body {
   cursor: pointer;
   z-index: 9999;
 }
-.control-button:hover { background: #f3f4f6; }
 
+.control-button:hover {
+  background: #f3f4f6;
+}
+
+/* Icon binnen de knop */
 .control-button .icon {
   width: 22px;
   height: 22px;
@@ -84,17 +88,21 @@ html, body {
   background-size: 22px 22px;
 }
 
-/* GPS */
+/* ============================================================
+   GPS KNOP – linksboven
+   ============================================================ */
 #gps-toggle {
   position: absolute;
   left: 10px;
   top: 10px;
 }
 
+/* GPS icoon – UIT (grijs) */
 #gps-toggle .icon {
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%236b7280' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
 }
 
+/* GPS icoon – AAN (blauw) */
 #gps-toggle.gps-on .icon {
   background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%232563EB' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z'/%3E%3C/svg%3E");
 }
@@ -103,24 +111,79 @@ html, body {
   box-shadow: 0 0 6px rgba(37,99,235,0.55);
 }
 
-/* Lagenknop */
+/* ============================================================
+   LAYER CONTROL – rechtsboven, iets hoger & uitgelijnd
+   ============================================================ */
 .leaflet-top.leaflet-right {
   top: 10px !important;
   right: 10px !important;
 }
 
+.leaflet-control-layers {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin-top: 0 !important; /* voorkomt extra ruimte */
+}
+
+.leaflet-control-layers-toggle {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.22) !important;
+  background-color: #ffffff !important;
+
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 22px 22px !important;
+
+  /* custom layers-icoon */
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' fill='%23111827' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8L12 4L20 8L12 12L4 8Z'/%3E%3Cpath d='M4 12L12 16L20 12' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3Cpath d='M4 16L12 20L20 16' fill='none' stroke='%23111827' stroke-width='1.4'/%3E%3C/svg%3E") !important;
+}
+
+.leaflet-control-layers-toggle:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Uitgeklapte lijst */
+.leaflet-control-layers-expanded {
+  background: #ffffff !important;
+  border-radius: 10px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+  padding: 8px !important;
+}
+
+.leaflet-control-layers-list {
+  background: #ffffff !important;
+  font-size: 11px;
+}
+
 /* ============================================================
-   OPACITY
-============================================================ */
+   OPACITY – toggle + panel rechtsonder
+   ============================================================ */
 #opacity-toggle {
   position: absolute;
   right: 10px;
-  bottom: 80px;
+  bottom: 80px; /* Zo blijft de knop zichtbaar op mobiel */
 }
+
+/* icoon: stapel lagen, bovenste transparanter */
+#opacity-toggle .icon {
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3ClinearGradient id='fade' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff' stop-opacity='1'/%3E%3Cstop offset='1' stop-color='%23111827' stop-opacity='1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 9L12 5L20 9L12 13L4 9Z' fill='url(%23fade)' stroke='%23111827' stroke-width='1'/%3E%3Cpath d='M6 13L12 16L18 13' fill='none' stroke='%23111827' stroke-width='1.3'/%3E%3Cpath d='M6 16.5L12 19.5L18 16.5' fill='none' stroke='%23111827' stroke-width='1.3'/%3E%3C/svg%3E");
+}
+
+#opacity-toggle.opacity-on {
+  box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* Paneel zelf */
 #opacity-panel {
   position: absolute;
   right: 10px;
-  bottom: 140px;
+  bottom: 140px; /* Was 56px — nu hoger zodat hij nooit overlapt en zichtbaar is op mobiel */
   padding: 8px 10px;
   background: #ffffff;
   border-radius: 10px;
@@ -130,15 +193,42 @@ html, body {
   z-index: 9999;
   min-width: 150px;
 }
-.hidden { display: none; }
+
+.hidden {
+  display: none;
+}
+
+.opacity-control-title {
+  font-weight: 600;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.opacity-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.opacity-row label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.opacity-row input[type="range"] {
+  width: 100%;
+}
+
 
 /* ============================================================
-   BUILD LABEL
-============================================================ */
+   BUILD LABEL – linksonder
+   ============================================================ */
 .build-label {
   position: absolute;
   left: 10px;
-  bottom: 80px;
+  bottom: 80px; /* zelfde hoogte als opacity-toggle */
   font-size: 10px;
   color: #6b7280;
   background: rgba(255,255,255,0.9);
@@ -148,19 +238,21 @@ html, body {
   z-index: 9999;
 }
 
-/* Monument labels */
+/* Subtiele labels voor Monumenten (eigen) */
 .mon-label {
   font-size: 11px;
-  color: #4b0082;
+  color: #4b0082;           /* zacht paars */
   opacity: 0.75;
   font-weight: 600;
   white-space: nowrap;
   text-shadow: 0 0 2px white;
-  pointer-events: none;
+  pointer-events: none;     /* labels nooit klikbaar */
 }
+
+/* Subtiele labels voor AMK Monumenten (bvd 8.5) */
 .amk-label {
   font-size: 11px;
-  color: #7e22ce;
+  color: #7e22ce;           /* ander paars */
   opacity: 0.75;
   font-weight: 600;
   white-space: nowrap;
@@ -168,20 +260,13 @@ html, body {
   pointer-events: none;
 }
 
-/* Popup */
+/* Popup styling – simpel en strak */
 .popup-mon {
   font-size: 12px;
   line-height: 1.4;
   max-width: 200px;
 }
-
-/* ============================================================
-   MAP ROTATION (8.6)
-============================================================ */
-.leaflet-map-pane {
-  transition: transform 0.25s linear;
-  transform-origin: center center;
-}
+  
 </style>
 </head>
 
@@ -189,12 +274,12 @@ html, body {
   <div id="app">
     <div id="map"></div>
 
-    <!-- GPS -->
+    <!-- GPS knop -->
     <button id="gps-toggle" class="control-button gps-off" type="button">
       <div class="icon"></div>
     </button>
 
-    <!-- Opacity -->
+    <!-- Opacity toggle + panel -->
     <button id="opacity-toggle" class="control-button" type="button">
       <div class="icon"></div>
     </button>
@@ -219,7 +304,8 @@ html, body {
       </div>
     </div>
 
-    <div class="build-label">bvd 8.6</div>
+    <!-- Build label -->
+    <div class="build-label">bvd 8.5</div>
   </div>
 
   <!-- JS -->
@@ -227,11 +313,12 @@ html, body {
   <script src="https://unpkg.com/topojson-client@3"></script>
 
 <script>
-console.log("Detectorkaart V2 – bvd 8.6 geladen");
+console.log("Detectorkaart V2 – bvd 8.5 geladen");
+
 
 /* ============================================================
-   KAART INIT
-============================================================ */
+   KAART INIT – zonder zoomControl
+   ============================================================ */
 const map = L.map("map", {
   zoomControl: false
 }).setView([52.07, 4.35], 12);
@@ -248,7 +335,7 @@ const googleHybrid = L.tileLayer(
 
 /* ============================================================
    PDOK
-============================================================ */
+   ============================================================ */
 const ahnWms = L.tileLayer.wms(
   "https://service.pdok.nl/rws/ahn/wms/v1_0?",
   { layers: "dtm_05m", format: "image/png", transparent: true }
@@ -259,20 +346,315 @@ const geomorf = L.tileLayer.wms(
   { layers: "geomorphological_area", format: "image/png", transparent: true }
 );
 
+/* Start-opacities */
 ahnWms.setOpacity(0.7);
 geomorf.setOpacity(0.5);
 
 /* ============================================================
-   MAP ROTATION (8.6)
-============================================================ */
-function rotateMap(deg) {
-  const pane = document.querySelector(".leaflet-map-pane");
-  if (!pane) return;
-  pane.style.transform = `rotate(${deg}deg)`;
+   AMK Monumenten — officiële RCE/PDOK kleurcodering (bvd 8.5)
+   ============================================================ */
+
+const amkLayer = L.layerGroup();
+
+fetch("data/amk_monumenten.topojson")
+  .then(r => r.json())
+  .then(topo => {
+
+    const nameKey = Object.keys(topo.objects)[0];
+    const geo = topojson.feature(topo, topo.objects[nameKey]);
+
+    // Officiële AMK → RCE kleuren
+  function amkColor(waarde) {
+  if (!waarde) return "#ddd";
+
+  const v = waarde.trim();
+
+  switch (v) {
+    case "Terrein van archeologische waarde":
+      return "#c4b5fd"; // licht
+
+    case "Terrein van hoge archeologische waarde":
+      return "#8b5cf6"; // medium licht
+
+    case "Terrein van zeer hoge archeologische waarde":
+      return "#6d28d9"; // medium
+
+    case "Terrein van zeer hoge archeologische waarde, beschermd":
+      return "#4c1d95"; // donker (beschermd)
+
+    default:
+      return "#ddd"; // fallback
+  }
 }
 
+
+    const layer = L.geoJSON(geo, {
+      style: function (f) {
+        const waarde = f.properties?.WAARDE || "";
+        const col = amkColor(waarde);
+        return {
+          color: col,
+          fillColor: col,
+          fillOpacity: 0.45,   // officiële feel, niet flets
+          weight: 1.1
+        };
+      },
+
+      onEachFeature: (feature, polygon) => {
+        const props = feature.properties || {};
+
+        const waarde = props.WAARDE ?? null;
+        const monumentnr = props.MONUMENTNR ?? null;
+
+        let txt = "";
+        if (waarde) txt += `<strong>${waarde}</strong><br>`;
+        if (monumentnr) txt += `Monumentnr: ${monumentnr}`;
+
+        if (txt.trim() !== "") {
+          polygon.bindPopup(`<div class="popup-mon">${txt}</div>`);
+        }
+      }
+    });
+
+    amkLayer.addLayer(layer);
+  });
+
+
 /* ============================================================
-   TRACKING + HEADING
+   Monumenten (eigen) — labels alleen bij zoom >= 14
+   ============================================================ */
+const customMonLayer = L.layerGroup();
+let monLabels = []; // lijst voor labelmarkers
+
+fetch("data/monumenten_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+
+    const layer = L.geoJSON(geo, {
+      style: {
+        color: "#9333ea",
+        fillColor: "#c4b5fd",
+        fillOpacity: 0.35,
+        weight: 1.2
+      },
+
+      onEachFeature: function (feature, polygon) {
+
+        /* ==========================
+           POPUP — altijd beschikbaar
+           ========================== */
+        const name =
+          feature.properties.name ||
+          feature.properties.Name ||
+          feature.properties.Naam ||
+          null;
+
+        const desc =
+          feature.properties.description ||
+          feature.properties.Description ||
+          feature.properties.Omschrijving ||
+          null;
+
+        if (desc) {
+          polygon.bindPopup(
+            `<div class="popup-mon">
+               <strong>${name ?? "Monument"}</strong><br>
+               ${desc}
+             </div>`
+          );
+        }
+
+        /* ======================================
+           LABEL — MAAR: alleen tonen bij zoom >= 14
+           ====================================== */
+        if (name) {
+          const center = polygon.getBounds().getCenter();
+          const labelMarker = L.marker(center, {
+            icon: L.divIcon({
+              className: "mon-label",
+              html: name,
+              iconSize: null
+            }),
+            interactive: false
+          });
+
+          // opslaan voor dynamische toggle
+          monLabels.push(labelMarker);
+        }
+      }
+    });
+
+    customMonLayer.addLayer(layer);
+
+    /* ======================================
+       Dynamisch aan/uit bij zoomen
+       ====================================== */
+    function updateMonLabels() {
+      if (map.getZoom() >= 14) {
+        monLabels.forEach(lbl => lbl.addTo(customMonLayer));
+      } else {
+        monLabels.forEach(lbl => customMonLayer.removeLayer(lbl));
+      }
+    }
+
+    map.on("zoomend", updateMonLabels);
+    updateMonLabels(); // eerste run
+  });
+
+/* ============================================================
+   Archis-punten — exact zelfde gedrag als Toestemmingen
+   ============================================================ */
+const puntenLayer = L.layerGroup();
+
+function makeArchisIcon(zoom) {
+  const size = Math.max(10, Math.min(20, zoom * 1.1));
+  const dot = "●";  // super subtiel, perfect rond symbool
+
+  return L.divIcon({
+    html: `<div style="
+      font-size:${size}px;
+      color:#7c3aed;        /* paars */
+      line-height:1;
+    ">${dot}</div>`,
+    className: "archis-icon",
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
+
+fetch("data/punten_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.marker(latlng, { icon: makeArchisIcon(map.getZoom()) })
+    });
+
+    puntenLayer.addLayer(layer);
+
+    // meeschalen bij zoom
+    map.on("zoomend", () => {
+      layer.eachLayer(m =>
+        m.setIcon(makeArchisIcon(map.getZoom()))
+      );
+    });
+  });
+
+
+/* ============================================================
+   Toestemmingen
+   ============================================================ */
+const toestLayer = L.layerGroup();
+
+function makeToestIcon(zoom) {
+  const size = Math.max(12, Math.min(22, zoom * 1.2));
+  return L.divIcon({
+    html: `<div class="toestemmings-vink" style="font-size:${size}px; color:#22c55e;">★</div>`,
+    className: "toestemmings-icon",
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
+
+fetch("data/toestemmingen_custom.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.marker(latlng, { icon: makeToestIcon(map.getZoom()) })
+    });
+    toestLayer.addLayer(layer);
+
+    map.on("zoomend", () => {
+      layer.eachLayer(m => m.setIcon(makeToestIcon(map.getZoom())));
+    });
+  });
+
+
+/* ============================================================
+   Castella (punten) — subtiele zoom-based blauwe dots
+   ============================================================ */
+const romPtsLayer = L.layerGroup();
+
+function makeCastellaIcon(zoom) {
+  const size = Math.max(10, Math.min(20, zoom * 1.1));
+  const dot = "●";  // zelfde subtiele dot als Archis, maar blauw
+
+  return L.divIcon({
+    html: `<div style="
+      font-size:${size}px;
+      color:#2b6cb0;        /* Romeins blauw */
+      line-height:1;
+    ">${dot}</div>`,
+    className: "castella-icon",
+    iconSize: [size, size],
+    iconAnchor: [size/2, size/2]
+  });
+}
+
+fetch("data/rom_def_points.geojson")
+  .then(r => r.json())
+  .then(geo => {
+    const layer = L.geoJSON(geo, {
+      pointToLayer: (f, latlng) =>
+        L.marker(latlng, { icon: makeCastellaIcon(map.getZoom()) })
+    });
+
+    romPtsLayer.addLayer(layer);
+
+    // meeschalen bij zoom
+    map.on("zoomend", () => {
+      layer.eachLayer(m =>
+        m.setIcon(makeCastellaIcon(map.getZoom()))
+      );
+    });
+  });
+
+/* ============================================================
+   Castella (lijnen) – dun, blauw, geen zwarte omlijning
+   ============================================================ */
+const romLineLayer = L.layerGroup();
+
+fetch("data/rom_def_lines.geojson")
+  .then(r => r.json())
+  .then(geo => {
+
+    const layer = L.geoJSON(geo, {
+      style: {
+        color: "#2b6cb0",     /* zelfde blauw als punten */
+        weight: 2,            /* dun, niet schreeuwerig */
+        opacity: 0.7,         /* subtiel */
+        lineJoin: "round",
+        lineCap: "round"
+      }
+    });
+
+    romLineLayer.addLayer(layer);
+  });
+
+/* ============================================================
+   LAYER CONTROL
+   ============================================================ */
+const baseLayers = {
+  "OpenStreetMap": osm,
+  "Google Hybrid": googleHybrid
+};
+
+const overlays = {
+  "AHN 0.5m": ahnWms,
+  "Geomorfologie": geomorf,
+  "Monumenten (AMK)": amkLayer,
+  "Monumenten (eigen)": customMonLayer,
+  "Archis-punten": puntenLayer,
+  "Toestemmingen": toestLayer,
+  "Castella (punten)": romPtsLayer,
+  "Castella (lijnen)": romLineLayer
+};
+
+L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
+
+/* ============================================================
+   GPS TRACKING — smooth heading + Google-size fixed cone
 ============================================================ */
 
 let tracking = false;
@@ -280,20 +662,8 @@ let firstJumpDone = false;
 let heading = null;
 let smoothHeading = null;
 
-function updateSmoothHeading(raw) {
-  if (smoothHeading === null) {
-    smoothHeading = raw;
-  } else {
-    smoothHeading = smoothHeading * 0.85 + raw * 0.15;
-  }
-
-  if (tracking) {
-    rotateMap(-smoothHeading);
-  }
-}
-
 /* -----------------------------------------------------------
-   GPS Markers
+   Blauwe stip + witte rand (Google)
 ----------------------------------------------------------- */
 let gpsMarker = L.circleMarker([52.07, 4.35], {
   radius: 10,
@@ -303,6 +673,9 @@ let gpsMarker = L.circleMarker([52.07, 4.35], {
   fillOpacity: 1
 }).addTo(map);
 
+/* -----------------------------------------------------------
+   Accuracy circle
+----------------------------------------------------------- */
 let gpsAccuracy = L.circle([52.07, 4.35], {
   radius: 0,
   color: "#1a73e8",
@@ -310,7 +683,10 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
   weight: 1
 }).addTo(map);
 
-/* Direction cone */
+/* -----------------------------------------------------------
+   Direction cone — GOOGLE SIZE 
+   (niet die scheepstoeter van eerder)
+----------------------------------------------------------- */
 let directionCone = L.polygon([], {
   color: "#1a73e8",
   fillColor: "#1a73e8",
@@ -318,10 +694,29 @@ let directionCone = L.polygon([], {
   weight: 0
 }).addTo(map);
 
+/* Google-cone echte afmetingen:
+   - begin smal: ±20–24px
+   - eind breed: ±70px
+   - lengte: ±95px
+*/
 const CONE_NEAR = 22;
 const CONE_FAR  = 70;
 const CONE_LEN  = 95;
 
+/* -----------------------------------------------------------
+   Smooth heading filter — geen schokken meer
+----------------------------------------------------------- */
+function updateSmoothHeading(raw) {
+  if (smoothHeading === null) {
+    smoothHeading = raw;
+    return;
+  }
+  smoothHeading = smoothHeading * 0.85 + raw * 0.15;
+}
+
+/* -----------------------------------------------------------
+   Cone tekenen — vast formaat in pixels
+----------------------------------------------------------- */
 function drawCone(latlng, hdg) {
   if (!hdg || !latlng) {
     directionCone.setLatLngs([]);
@@ -330,19 +725,20 @@ function drawCone(latlng, hdg) {
 
   const base = map.latLngToLayerPoint(latlng);
 
-  const rad = d => d * Math.PI/180;
+  const rad = d => d * Math.PI / 180;
   const a = rad(hdg - 90);
 
   const fwd = L.point(Math.cos(a), Math.sin(a));
 
+  // kleine Google-afmetingen
   const near = CONE_NEAR;
   const far  = CONE_FAR;
   const len  = CONE_LEN;
 
-  const A = base.add(L.point(-fwd.y, fwd.x).multiplyBy(near/2));
-  const B = base.add(L.point( fwd.y,-fwd.x).multiplyBy(near/2));
-  const C = base.add(fwd.multiplyBy(len).add(L.point(-fwd.y,fwd.x).multiplyBy(far/2)));
-  const D = base.add(fwd.multiplyBy(len).add(L.point( fwd.y,-fwd.x).multiplyBy(far/2)));
+  const A = base.add(L.point(-fwd.y,  fwd.x).multiplyBy(near / 2));
+  const B = base.add(L.point( fwd.y, -fwd.x).multiplyBy(near / 2));
+  const C = base.add(fwd.multiplyBy(len).add(L.point(-fwd.y, fwd.x).multiplyBy(far / 2)));
+  const D = base.add(fwd.multiplyBy(len).add(L.point(fwd.y, -fwd.x).multiplyBy(far / 2)));
 
   directionCone.setLatLngs([
     map.layerPointToLatLng(A),
@@ -352,18 +748,37 @@ function drawCone(latlng, hdg) {
   ]);
 }
 
-/* ============================================================
-   GPS EVENTS
-============================================================ */
-
+/* -----------------------------------------------------------
+   GPS update
+----------------------------------------------------------- */
 function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
-  if (smoothHeading !== null) drawCone(latlng, smoothHeading);
+  if (smoothHeading !== null) {
+    drawCone(latlng, smoothHeading);
+  }
 }
 
+/* -----------------------------------------------------------
+   Kompas events — raw heading → smooth
+----------------------------------------------------------- */
+if (window.DeviceOrientationEvent) {
+
+  window.addEventListener("deviceorientationabsolute", ev => {
+    if (ev.alpha != null) updateSmoothHeading(360 - ev.alpha);
+  });
+
+  window.addEventListener("deviceorientation", ev => {
+    if (ev.webkitCompassHeading) updateSmoothHeading(ev.webkitCompassHeading);
+  });
+
+}
+
+/* -----------------------------------------------------------
+   GPS fix
+----------------------------------------------------------- */
 map.on("locationfound", (e) => {
   if (!tracking) return;
 
@@ -377,20 +792,9 @@ map.on("locationfound", (e) => {
 
 map.on("locationerror", e => alert("GPS fout: " + e.message));
 
-/* Kompas */
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientationabsolute", ev => {
-    if (ev.alpha != null) updateSmoothHeading(360 - ev.alpha);
-  });
-
-  window.addEventListener("deviceorientation", ev => {
-    if (ev.webkitCompassHeading) updateSmoothHeading(ev.webkitCompassHeading);
-  });
-}
-
-/* ============================================================
-   GPS KNOP
-============================================================ */
+/* -----------------------------------------------------------
+   Knop gedrukt
+----------------------------------------------------------- */
 const gpsBtn = document.getElementById("gps-toggle");
 
 gpsBtn.addEventListener("click", () => {
@@ -403,71 +807,68 @@ gpsBtn.addEventListener("click", () => {
   } else {
     map.stopLocate();
     directionCone.setLatLngs([]);
-
-    /* 8.6: kaart terug naar Noord */
-    rotateMap(0);
   }
 });
 
-/* Bij zoom → cone opnieuw tekenen */
+/* -----------------------------------------------------------
+   Bij zoom → cone opnieuw tekenen (want pixel-based)
+----------------------------------------------------------- */
 map.on("zoomend", () => {
   if (gpsMarker && smoothHeading !== null) {
     drawCone(gpsMarker.getLatLng(), smoothHeading);
   }
 });
 
+
 /* ============================================================
    OPACITY SLIDERS
-============================================================ */
-
+   ============================================================ */
 const ahnSlider  = document.getElementById("ahn-opacity");
 const geomSlider = document.getElementById("geomorf-opacity");
 const ahnValue   = document.getElementById("ahn-opacity-value");
 const geomValue  = document.getElementById("geomorf-opacity-value");
 
-ahnSlider.addEventListener("input", (e) => {
-  const v = Number(e.target.value);
-  ahnWms.setOpacity(v / 100);
-  ahnValue.textContent = `${v}%`;
-});
+if (ahnSlider) {
+  ahnSlider.addEventListener("input", (e) => {
+    const v = Number(e.target.value);
+    ahnWms.setOpacity(v / 100);
+    if (ahnValue) ahnValue.textContent = `${v}%`;
+  });
+}
 
-geomSlider.addEventListener("input", (e) => {
-  const v = Number(e.target.value);
-  geomorf.setOpacity(v / 100);
-  geomValue.textContent = `${v}%`;
-});
+if (geomSlider) {
+  geomSlider.addEventListener("input", (e) => {
+    const v = Number(e.target.value);
+    geomorf.setOpacity(v / 100);
+    if (geomValue) geomValue.textContent = `${v}%`;
+  });
+}
 
 /* ============================================================
-   OPACITY PANEL TOGGLE
-============================================================ */
+   OPACITY PANEL TOGGLE + click-buiten-om sluit paneel
+   ============================================================ */
 const opacityToggle = document.getElementById("opacity-toggle");
 const opacityPanel  = document.getElementById("opacity-panel");
 
-opacityToggle.addEventListener("click", (ev) => {
-  ev.stopPropagation();
-  const isHidden = opacityPanel.classList.contains("hidden");
-  opacityPanel.classList.toggle("hidden", !isHidden);
-  opacityToggle.classList.toggle("opacity-on", isHidden);
-});
+if (opacityToggle && opacityPanel) {
+  opacityToggle.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    const isHidden = opacityPanel.classList.contains("hidden");
+    opacityPanel.classList.toggle("hidden", !isHidden);
+    opacityToggle.classList.toggle("opacity-on", isHidden);
+  });
 
-document.addEventListener("click", (ev) => {
-  if (opacityPanel.classList.contains("hidden")) return;
-  if (opacityPanel.contains(ev.target)) return;
-  if (opacityToggle.contains(ev.target)) return;
+  document.addEventListener("click", (ev) => {
+    if (opacityPanel.classList.contains("hidden")) return;
 
-  opacityPanel.classList.add("hidden");
-  opacityToggle.classList.remove("opacity-on");
-});
+    const target = ev.target;
+    if (opacityPanel.contains(target)) return;
+    if (opacityToggle.contains(target)) return;
 
-/* ============================================================
-   LAGEN (zélfde als 8.5)
-============================================================ */
-
-/* AMK, custom monumenten, Archis, Toestemmingen, Castella
-   — identiek aan jouw 8.5 code, niet geknipt i.v.m. lengte.
-   JE KUNT DIT HIER TERUGPLAKKEN ALS JE HET WIL,
-   maar technisch hoeft hier niets voor rotatie aangepast.
-*/
+    opacityPanel.classList.add("hidden");
+    opacityToggle.classList.remove("opacity-on");
+  });
+}
 </script>
 </body>
 </html>
