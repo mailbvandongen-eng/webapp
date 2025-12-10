@@ -364,22 +364,27 @@ fetch("data/amk_monumenten.topojson")
     const geo = topojson.feature(topo, topo.objects[nameKey]);
 
     // Officiële AMK → RCE kleuren
-  function amkColor(value) {
-  if (!value) return "#c4b5fd"; // licht paars fallback
+  function amkColor(waarde) {
+  if (!waarde) return "#ddd";
 
-  const v = value.toLowerCase();
+  const v = waarde.trim();
 
-  // Beschermd
-  if (v.includes("bescherm")) return "#4c1d95";  // donkerste paars
+  switch (v) {
+    case "Terrein van archeologische waarde":
+      return "#c7d2fe"; // licht
 
-  // Zeer hoge waarde
-  if (v.includes("zeer hoge") && v.includes("hoog")) return "#6d28d9"; // donker paars
+    case "Terrein van hoge archeologische waarde":
+      return "#a5b4fc"; // medium licht
 
-  // Hoge waarde
-  if (v.includes("van hoge")) return "#8b5cf6"; // normaal paars
+    case "Terrein van zeer hoge archeologische waarde":
+      return "#818cf8"; // medium
 
-  // Overig
-  return "#c4b5fd"; // licht paars
+    case "Terrein van zeer hoge archeologische waarde, beschermd":
+      return "#4f46e5"; // donker (beschermd)
+
+    default:
+      return "#ddd"; // fallback
+  }
 }
 
 
