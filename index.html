@@ -654,9 +654,11 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING
+   GPS TRACKING – Eénmalige jump bij elke keer aanzetten
    ============================================================ */
+
 let tracking = false;
+let shouldJump = false;
 
 let gpsMarker = L.circleMarker([52.07, 4.35], {
   radius: 6,
@@ -676,6 +678,12 @@ function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
+
+  // eenmalige sprong bij starten
+  if (shouldJump) {
+    map.setView(latlng, Math.max(map.getZoom(), 17), { animate: true });
+    shouldJump = false;
+  }
 }
 
 map.on("locationfound", (e) => {
@@ -688,11 +696,13 @@ map.on("locationerror", (e) => {
 });
 
 const gpsBtn = document.getElementById("gps-toggle");
+
 gpsBtn.addEventListener("click", () => {
   tracking = !tracking;
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
+    shouldJump = true; // bij elke 'aan' → één sprong
     map.locate({ watch: true, enableHighAccuracy: true });
   } else {
     map.stopLocate();
