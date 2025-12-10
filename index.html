@@ -654,16 +654,17 @@ const overlays = {
 L.control.layers(baseLayers, overlays, { collapsed: true }).addTo(map);
 
 /* ============================================================
-   GPS TRACKING — beacon + kleine vaste cone + perfect toggle
+   GPS TRACKING — smooth heading + fixed-size cone
 ============================================================ */
 
 let tracking = false;
 let firstJumpDone = false;
 let heading = null;
+let smoothHeading = null;
 
-/* ------------------------------------------------------------
-   Beacon (Google style: blauw + witte rand)
------------------------------------------------------------- */
+// -----------------------------------------------------------
+// Blauwe Google-style beacon + witte rand
+// -----------------------------------------------------------
 let gpsMarker = L.circleMarker([52.07, 4.35], {
   radius: 10,
   color: "#ffffff",
@@ -672,9 +673,9 @@ let gpsMarker = L.circleMarker([52.07, 4.35], {
   fillOpacity: 1
 }).addTo(map);
 
-/* ------------------------------------------------------------
-   Accuracy circle
------------------------------------------------------------- */
+// -----------------------------------------------------------
+// Accuracy circle
+// -----------------------------------------------------------
 let gpsAccuracy = L.circle([52.07, 4.35], {
   radius: 0,
   color: "#1a73e8",
@@ -682,50 +683,55 @@ let gpsAccuracy = L.circle([52.07, 4.35], {
   weight: 1
 }).addTo(map);
 
-/* ------------------------------------------------------------
-   Kleine direction cone (vaste grootte, pixel-based)
------------------------------------------------------------- */
+// -----------------------------------------------------------
+// Direction cone (vast formaat, gradient-achtig effect)
+// -----------------------------------------------------------
 let directionCone = L.polygon([], {
   color: "#1a73e8",
   fillColor: "#1a73e8",
-  fillOpacity: 0.20,
+  fillOpacity: 0.22,
   weight: 0
 }).addTo(map);
 
-/* ------------------------------------------------------------
-   Pixel-based cone — NIET meeschalen, altijd vaste grootte
------------------------------------------------------------- */
-function updateDirectionCone(latlng, headingDeg) {
-  if (!headingDeg || !latlng) {
+
+// -----------------------------------------------------------
+// Smooth heading filter — voorkomt schokken
+// -----------------------------------------------------------
+function updateSmoothHeading(raw) {
+  if (smoothHeading === null) {
+    smoothHeading = raw;
+    return;
+  }
+
+  // low-pass filter → 90% oud, 10% nieuw
+  smoothHeading = smoothHeading * 0.9 + raw * 0.1;
+}
+
+
+// -----------------------------------------------------------
+// Cone tekenen — vaste grootte (ongeacht zoom)
+// -----------------------------------------------------------
+function drawCone(latlng, hdg) {
+  if (!hdg || !latlng) {
     directionCone.setLatLngs([]);
     return;
   }
 
-  // Subtiele Google-like afmetingen
-  const nearWidth = 14;    // smal begin
-  const farWidth  = 60;    // breed einde
-  const lengthPx  = 85;    // totale lengte
+  const near = 24;   // smal beginpunt
+  const far  = 95;   // breed
+  const len  = 130;  // lengte
 
   const base = map.latLngToLayerPoint(latlng);
-  const toRad = d => d * Math.PI / 180;
 
-  // Google offset
-  const angle = toRad(headingDeg - 90);
-  const forward = L.point(Math.cos(angle), Math.sin(angle));
+  const rad = d => d * Math.PI / 180;
+  const a = rad(hdg - 90);
 
-  // Basis links/rechts
-  const A = base.add(L.point(-forward.y, forward.x).multiplyBy(nearWidth / 2));
-  const B = base.add(L.point( forward.y,-forward.x).multiplyBy(nearWidth / 2));
+  const fwd = L.point(Math.cos(a), Math.sin(a));
 
-  // Voorpunt links/rechts
-  const C = base.add(
-    forward.multiplyBy(lengthPx)
-           .add(L.point(-forward.y, forward.x).multiplyBy(farWidth / 2))
-  );
-  const D = base.add(
-    forward.multiplyBy(lengthPx)
-           .add(L.point( forward.y,-forward.x).multiplyBy(farWidth / 2))
-  );
+  const A = base.add(L.point(-fwd.y,  fwd.x).multiplyBy(near / 2));
+  const B = base.add(L.point( fwd.y, -fwd.x).multiplyBy(near / 2));
+  const C = base.add(fwd.multiplyBy(len).add(L.point(-fwd.y, fwd.x).multiplyBy(far / 2)));
+  const D = base.add(fwd.multiplyBy(len).add(L.point( fwd.y,-fwd.x).multiplyBy(far / 2)));
 
   directionCone.setLatLngs([
     map.layerPointToLatLng(A),
@@ -735,36 +741,45 @@ function updateDirectionCone(latlng, headingDeg) {
   ]);
 }
 
-/* ------------------------------------------------------------
-   GPS update
------------------------------------------------------------- */
+
+// -----------------------------------------------------------
+// GPS update
+// -----------------------------------------------------------
 function updateGps(latlng, acc) {
   gpsMarker.setLatLng(latlng);
   gpsAccuracy.setLatLng(latlng);
   gpsAccuracy.setRadius(acc);
 
-  updateDirectionCone(latlng, heading);
+  if (smoothHeading !== null) {
+    drawCone(latlng, smoothHeading);
+  }
 }
 
-/* ------------------------------------------------------------
-   Device heading (kompas)
------------------------------------------------------------- */
+
+// -----------------------------------------------------------
+// Kompas events — raw heading → smooth heading
+// -----------------------------------------------------------
 if (window.DeviceOrientationEvent) {
 
-  // Android
   window.addEventListener("deviceorientationabsolute", ev => {
-    if (ev.alpha != null) heading = 360 - ev.alpha;
+    if (ev.alpha != null) {
+      const hdg = 360 - ev.alpha;
+      updateSmoothHeading(hdg);
+    }
   });
 
-  // iOS Safari
   window.addEventListener("deviceorientation", ev => {
-    if (ev.webkitCompassHeading) heading = ev.webkitCompassHeading;
+    if (ev.webkitCompassHeading) {
+      updateSmoothHeading(ev.webkitCompassHeading);
+    }
   });
+
 }
 
-/* ------------------------------------------------------------
-   On GPS fix
------------------------------------------------------------- */
+
+// -----------------------------------------------------------
+// Bij GPS fix
+// -----------------------------------------------------------
 map.on("locationfound", (e) => {
   if (!tracking) return;
 
@@ -776,38 +791,39 @@ map.on("locationfound", (e) => {
   }
 });
 
-map.on("locationerror", (e) => {
+map.on("locationerror", e => {
   alert("GPS fout: " + e.message);
 });
 
-/* ------------------------------------------------------------
-   GPS knop toggle
------------------------------------------------------------- */
+
+// -----------------------------------------------------------
+// Knop
+// -----------------------------------------------------------
 const gpsBtn = document.getElementById("gps-toggle");
 
 gpsBtn.addEventListener("click", () => {
-
   tracking = !tracking;
   gpsBtn.classList.toggle("gps-on", tracking);
 
   if (tracking) {
     firstJumpDone = false;
     map.locate({ watch: true, enableHighAccuracy: true });
-
   } else {
     map.stopLocate();
-    directionCone.setLatLngs([]); // cone weg
+    directionCone.setLatLngs([]);
   }
 });
 
-/* ------------------------------------------------------------
-   Bij zoomen: cone opnieuw projecteren (pixel-based)
------------------------------------------------------------- */
+
+// -----------------------------------------------------------
+// Bij zoom → cone opnieuw tekenen
+// -----------------------------------------------------------
 map.on("zoomend", () => {
-  if (gpsMarker && gpsMarker.getLatLng()) {
-    updateDirectionCone(gpsMarker.getLatLng(), heading);
+  if (gpsMarker && gpsMarker.getLatLng() && smoothHeading !== null) {
+    drawCone(gpsMarker.getLatLng(), smoothHeading);
   }
 });
+
 
 /* ============================================================
    OPACITY SLIDERS
