@@ -819,6 +819,19 @@ map.on("zoomend", () => {
   }
 });
 
+// Re-draw the pixel-based direction cone when the map is moved or resized
+map.on('moveend', () => {
+  if (gpsMarker && smoothHeading !== null) {
+    drawCone(gpsMarker.getLatLng(), smoothHeading);
+  }
+});
+
+map.on('resize', () => {
+  if (gpsMarker && smoothHeading !== null) {
+    drawCone(gpsMarker.getLatLng(), smoothHeading);
+  }
+});
+
 
 /* ============================================================
    OPACITY SLIDERS
